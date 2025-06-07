@@ -86,5 +86,5 @@ L’obiettivo è offrire un'esperienza didattica moderna, efficiente e altamente
 ---
 
 ```bash
-[Backend](https://github.com/vincenzomoussa/BE-Capstone-ThinkWise)
+[Link al Backend](https://github.com/vincenzomoussa/BE-Capstone-ThinkWise)
 ```
