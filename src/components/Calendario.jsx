@@ -11,57 +11,36 @@ import Thinner from "./Thinner";
 const Calendario = () => {
   const [settimana, setSettimana] = useState(moment());
   const [corsi, setCorsi] = useState([]);
-  const [insegnanti, setInsegnanti] = useState([]);
   const [livelli, setLivelli] = useState([]);
+  const [tuttiCorsi, setTuttiCorsi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [filtroInsegnante, setFiltroInsegnante] = useState("");
   const [filtroLivello, setFiltroLivello] = useState("");
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCorsi();
-    fetchInsegnanti();
     fetchLivelli();
-  }, [settimana, filtroInsegnante, filtroLivello]);
+    fetchTuttiCorsi();
+  }, [settimana, filtroLivello]);
 
   const fetchCorsi = async () => {
     setLoading(true);
     const giornoParam = "settimana";
-
-    console.log("📅 Parametri invio API:", {
-      giorno: giornoParam,
-      insegnante: filtroInsegnante,
-      livello: filtroLivello,
-    });
-
     try {
       const response = await apiClient.get(`/calendario/corsi-programmati`, {
         params: {
           giorno: giornoParam,
-          insegnante: filtroInsegnante,
           livello: filtroLivello,
         },
       });
-      console.log("📦 Corsi ricevuti:", response.data);
       setCorsi(response.data || []);
     } catch (error) {
-      console.error("❌ Errore nel recupero del calendario:", error);
       setError("⚠️ Nessun corso disponibile per questa settimana.");
       setCorsi([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchInsegnanti = async () => {
-    try {
-      const response = await apiClient.get("/insegnanti");
-      setInsegnanti(response.data || []);
-    } catch (error) {
-      console.error("❌ Errore nel recupero degli insegnanti:", error);
     }
   };
 
@@ -70,8 +49,16 @@ const Calendario = () => {
       const response = await apiClient.get("/livelli");
       setLivelli(response.data || []);
     } catch (error) {
-      console.error("❌ Errore nel recupero dei livelli:", error);
       setLivelli([]);
+    }
+  };
+
+  const fetchTuttiCorsi = async () => {
+    try {
+      const res = await apiClient.get("/corsi");
+      setTuttiCorsi(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      setTuttiCorsi([]);
     }
   };
 
@@ -79,7 +66,7 @@ const Calendario = () => {
     setSettimana(settimana.clone().add(direzione, "weeks"));
   };
 
-  const giorniSettimana = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+  const giorniSettimana = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì"];
 
   const normalizza = (str) => str?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -105,69 +92,16 @@ const Calendario = () => {
       <ThinkBar />
 
       <div className="container pt-5 mt-5">
-        <h2 className="text-center mb-4">📅 Calendario Corsi</h2>
-
-        <div className="row mb-3">
-          <div className="col-md-4">
-            <label className="form-label">🎓 Seleziona Insegnante:</label>
-            <select
-              className="form-select"
-              value={filtroInsegnante}
-              onChange={(e) => setFiltroInsegnante(e.target.value)}
-            >
-              <option value="">Tutti</option>
-              {insegnanti.map((insegnante) => (
-                <option key={insegnante.id} value={insegnante.id}>
-                  {insegnante.nome} {insegnante.cognome}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-4">
-            <label className="form-label">📚 Seleziona Livello:</label>
-            <select className="form-select" value={filtroLivello} onChange={(e) => setFiltroLivello(e.target.value)}>
-              <option value="">Tutti</option>
-              {livelli.map((livello) => (
-                <option key={livello} value={livello}>
-                  {livello}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-4 d-flex align-items-end">
-            <button
-              className="btn btn-secondary w-100"
-              onClick={() => {
-                setFiltroInsegnante("");
-                setFiltroLivello("");
-              }}
-            >
-              🔄 Reset Filtri
-            </button>
-          </div>
-        </div>
-
-        <div className="d-flex justify-content-between mb-3">
-          <button className="btn btn-outline-primary" onClick={() => cambiaSettimana(-1)}>
-            ⬅️ Settimana Precedente
-          </button>
-          <h5 className="text-center fs-5 mt-3">
-            {settimana.startOf("isoWeek").format("DD MMMM YYYY")} - {settimana.endOf("isoWeek").format("DD MMMM YYYY")}
-          </h5>
-          <button className="btn btn-outline-primary" onClick={() => cambiaSettimana(1)}>
-            Settimana Successiva ➡️
-          </button>
-        </div>
-
         {loading ? (
           <Thinner message="Caricamento calendario..." />
         ) : error ? (
           <div className="alert alert-danger">{error}</div>
         ) : (
           <div className="table-responsive-wrapper">
-            <table id="calendario-pdf" className="table table-bordered calendario-table">
+            <table
+              id="calendario-pdf"
+              className="table table-bordered calendario-table calendario-moderna calendario-moderna-fissa"
+            >
               <thead>
                 <tr>
                   <th>Ora</th>
@@ -180,7 +114,7 @@ const Calendario = () => {
                 {["08:00-10:00", "10:00-12:00", "12:00-14:00", "14:00-16:00", "16:00-18:00", "18:00-20:00"].map(
                   (orario) => (
                     <tr key={orario}>
-                      <td className="fw-bold align-middle text-center">{orario}</td>
+                      <td className="fw-bold align-middle text-center calendario-orari-colonna">{orario}</td>
                       {giorniSettimana.map((giorno) => {
                         const corsiInSlot = corsi.filter(
                           (c) => normalizza(c.giorno) === normalizza(giorno) && c.orario === orario
@@ -188,27 +122,22 @@ const Calendario = () => {
                         return (
                           <td key={giorno + orario}>
                             {corsiInSlot.length ? (
-                              corsiInSlot.map((corso) => (
-                                <div
-                                  key={corso.corsoId}
-                                  onClick={() => navigate(`/corsi/${corso.corsoId}`)}
-                                  className={`calendario-cella-piena ${
-                                    corso.tipoCorso?.toUpperCase().includes("PRIVATO")
-                                      ? "corso-privato"
-                                      : "corso-gruppo"
-                                  }`}
-                                >
-                                  <strong>
-                                    {corso.lingua} ({corso.tipoCorso})
-                                  </strong>
-                                  <span className={`badge-livello ${corso.livello}`}>🎯 {corso.livello}</span>
-                                  <span>📆 {corso.frequenza}</span>
-                                  <span>🏫 {corso.aula || "N/A"}</span>
-                                  <span>👨‍🏫 {corso.insegnante || "N/A"}</span>
-                                </div>
-                              ))
+                              corsiInSlot.map((corso) => {
+                                const corsoDettaglio = tuttiCorsi.find((c) => c.id === corso.corsoId);
+                                return (
+                                  <div
+                                    key={corso.corsoId}
+                                    onClick={() => navigate(`/corsi/${corso.corsoId}`)}
+                                    className="calendario-cella-piena calendario-cella-moderna"
+                                  >
+                                    <strong>{corsoDettaglio ? corsoDettaglio.nome : "Corso"}</strong>
+                                    <span>📆 {corso.frequenza}</span>
+                                    <span>🏫 {corso.aula || "N/A"}</span>
+                                  </div>
+                                );
+                              })
                             ) : (
-                              <div className="calendario-cella-vuota">-</div>
+                              <div className="calendario-cella-vuota calendario-cella-vuota-center">-</div>
                             )}
                           </td>
                         );
@@ -222,7 +151,7 @@ const Calendario = () => {
         )}
 
         <div className="text-center mb-3">
-          <button className="btn btn-outline-success" onClick={generaPDF}>
+          <button className="btn btn-outline-success d-none" onClick={generaPDF}>
             📄 Esporta Calendario in PDF
           </button>
         </div>

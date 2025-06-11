@@ -6,6 +6,7 @@ import Thinner from "./Thinner";
 import ModaleInsegnante from "./ModaleInsegnante";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { formatDateDMY } from "../utils/dateUtils";
 
 const sortIcons = {
   asc: <span style={{ fontSize: "0.9em", marginLeft: 4 }}>▼</span>,
@@ -111,12 +112,20 @@ const ListaInsegnanti = () => {
   // Filtro e ordinamento insegnanti
   const getInsegnantiToShow = () => {
     let filtered = insegnanti.filter((i) => {
-      const valore = filtroValore.toLowerCase();
+      const valore = filtroValore.toLowerCase().trim();
       switch (filtroTipo) {
-        case "nome":
+        case "nome": {
+          const fullName = (i.nome + " " + i.cognome).toLowerCase();
+          if (valore.includes(" ")) {
+            return fullName.includes(valore);
+          }
           return i.nome.toLowerCase().includes(valore) || i.cognome.toLowerCase().includes(valore);
-        case "specializzazioni":
-          return (i.specializzazioni || []).join(" ").toLowerCase().includes(valore);
+        }
+        case "specializzazioni": {
+          const specializzazioni = (i.specializzazioni || []).join(" ").toLowerCase();
+          const parole = valore.split(/\s+/).filter(Boolean);
+          return parole.every((p) => specializzazioni.includes(p));
+        }
         case "corsi":
           return corsi
             .filter((c) => c.insegnante?.id === i.id)
@@ -136,8 +145,8 @@ const ListaInsegnanti = () => {
           bValue = (b.nome + " " + b.cognome).toLowerCase();
           break;
         case "specializzazioni":
-          aValue = (a.specializzazioni || []).join(", ").toLowerCase();
-          bValue = (b.specializzazioni || []).join(", ").toLowerCase();
+          aValue = Array.isArray(a.specializzazioni) ? a.specializzazioni.length : 0;
+          bValue = Array.isArray(b.specializzazioni) ? b.specializzazioni.length : 0;
           break;
         case "corsi":
           aValue = corsi
@@ -289,7 +298,7 @@ const ListaInsegnanti = () => {
             onSubmit={creaInsegnante}
             insegnante={formInsegnante}
             setInsegnante={setFormInsegnante}
-            modalTitle="Aggiungi Insegnante"
+            modalTitle="✏️ Aggiungi/Modifica Insegnante"
           />
 
           <div
@@ -344,15 +353,24 @@ const ListaInsegnanti = () => {
                             <td className="badge-cell">
                               <div className="student-courses-badges-wrapper">
                                 <div className="student-courses-badges horizontal-badges">
-                                  {(insegnante.specializzazioni || []).map((spec, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="badge badge-corso bg-primary text-light"
-                                      style={{ backgroundColor: "#6c63ff" }}
-                                    >
-                                      {formatSpecialization(spec)}
-                                    </span>
-                                  ))}
+                                  {Array.isArray(insegnante.specializzazioni) && insegnante.specializzazioni.length > 0 ? (
+                                    <>
+                                      <span
+                                        className="badge badge-corso bg-primary text-light"
+                                        style={{ backgroundColor: "#6c63ff" }}
+                                      >
+                                        {formatSpecialization(insegnante.specializzazioni[0])}
+                                      </span>
+                                      {insegnante.specializzazioni.length > 1 && (
+                                        <span
+                                          className="badge badge-corso bg-primary text-light"
+                                          style={{ backgroundColor: "#6c63ff" }}
+                                        >
+                                          +{insegnante.specializzazioni.length - 1}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : null}
                                 </div>
                               </div>
                             </td>
@@ -360,15 +378,17 @@ const ListaInsegnanti = () => {
                               {corsiInsegnante.length > 0 ? (
                                 <div className="student-courses-badges-wrapper">
                                   <div className="student-courses-badges horizontal-badges">
-                                    {corsiInsegnante.map((corso) => (
-                                      <span
-                                        key={corso.id}
-                                        className="badge badge-corso me-1 bg-success"
-                                        title={formatSpecialization(corso.nome)}
-                                      >
-                                        {formatSpecialization(corso.nome)}
+                                    <span
+                                      className="badge badge-corso me-1 bg-success"
+                                      title={formatSpecialization(corsiInsegnante[0].nome)}
+                                    >
+                                      {formatSpecialization(corsiInsegnante[0].nome)}
+                                    </span>
+                                    {corsiInsegnante.length > 1 && (
+                                      <span className="badge badge-corso bg-success text-light" style={{ fontWeight: 600 }}>
+                                        +{corsiInsegnante.length - 1}
                                       </span>
-                                    ))}
+                                    )}
                                   </div>
                                 </div>
                               ) : (
@@ -378,7 +398,7 @@ const ListaInsegnanti = () => {
                               )}
                             </td>
                             <td>
-                              <span className="fw-bold">{insegnante.dataAssunzione}</span>
+                              <span className="fw-bold">{formatDateDMY(insegnante.dataAssunzione)}</span>
                             </td>
                             <td>
                               <div className="actions-pill">
@@ -427,105 +447,6 @@ const ListaInsegnanti = () => {
           </div>
         </div>
       </div>
-      <style>{`
-        .studentlist-scroll-area::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-scroll-area:hover::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area:hover {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        /* Scrollbar globale invisibile */
-        ::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        html {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-pagination-sticky {
-          position: sticky;
-          bottom: 0;
-          background: #fff;
-          z-index: 2;
-          box-shadow: 0 -2px 8px #0001;
-          padding-top: 8px;
-          margin-bottom: -8px;
-        }
-        .studentlist-pagination-pills {
-          display: flex;
-          gap: 8px;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .studentlist-page-pill {
-          border-radius: 999px;
-          overflow: hidden;
-          transition: box-shadow 0.2s;
-        }
-        .studentlist-page-btn {
-          border: 1.5px solid #6366f1;
-          background: #fff;
-          color: #6366f1;
-          border-radius: 999px;
-          padding: 4px 16px;
-          font-size: 1em;
-          font-weight: 500;
-          transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-          outline: none;
-          cursor: pointer;
-        }
-        .studentlist-page-btn:hover {
-          background: #e0e7ff;
-          color: #3730a3;
-          box-shadow: 0 2px 8px #6366f122;
-        }
-        .studentlist-page-pill.active .studentlist-page-btn {
-          background: #6366f1;
-          color: #fff;
-          border-color: #6366f1;
-          box-shadow: 0 2px 8px #6366f133;
-        }
-        /* Altezza fissa per tutte le righe della tabella studenti */
-        .modern-table tbody tr {
-          height: 64px;
-          max-height: 64px;
-        }
-        .modern-table td {
-          vertical-align: middle !important;
-        }
-        /* Impedisco che i badge verticali facciano crescere la riga */
-        .student-courses-badges.vertical-badges {
-          min-height: 36px;
-          max-height: 36px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          overflow-y: hidden;
-          white-space: nowrap;
-          gap: 4px;
-        }
-        /* Se vuoi badge più piccoli, puoi aggiungere qui: */
-        /* .student-courses-badges.vertical-badges .badge { font-size: 0.95em; padding: 4px 10px; } */
-      `}</style>
     </>
   );
 };

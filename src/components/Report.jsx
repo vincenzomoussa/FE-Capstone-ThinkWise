@@ -145,16 +145,18 @@ const Report = () => {
     fetchInsegnanti();
   }, []);
 
-  const COLORS = ["#486258", "#CC9C77", "#A67D5E", "#DB8B6E", "#7A9E9F", "#D9A404"];
+  const COLORS = [
+    "#6366f1", "#818cf8", "#a5b4fc", "#38bdf8", "#f472b6", "#facc15", "#22d3ee", "#f59e42"
+  ];
 
   return (
     <>
       <ThinkBar />
       <div className="container pt-5 mt-5">
-        <h2 className="text-center mb-4">📊 Report {mode === "annuale" ? "Annuale" : "Mensile"}</h2>
+        <h2 className="text-center mb-4" style={{ color: '#6366f1', fontWeight: 700, letterSpacing: 0.5 }}>📊 Report {mode === "annuale" ? "Annuale" : "Mensile"}</h2>
 
-        <div className="d-flex justify-content-center mb-3 gap-2 flex-wrap">
-          <select className="form-select w-auto" value={mode} onChange={(e) => setMode(e.target.value)}>
+        <div className="d-flex justify-content-center mb-4 gap-3 flex-wrap align-items-center report-filters-bar">
+          <select className="form-select w-auto report-select" value={mode} onChange={(e) => setMode(e.target.value)}>
             <option value="mensile">Mensile</option>
             <option value="annuale">Annuale</option>
           </select>
@@ -166,11 +168,11 @@ const Report = () => {
             showYearPicker={mode === "annuale"}
             showMonthYearPicker={mode === "mensile"}
             locale="it"
-            className="form-control text-center fw-bold"
+            className="form-control text-center fw-bold report-select"
           />
 
           <select
-            className="form-select w-auto"
+            className="form-select w-auto report-select"
             value={insegnante}
             onChange={(e) => setInsegnante(Number(e.target.value))}
           >
@@ -182,18 +184,22 @@ const Report = () => {
             ))}
           </select>
 
-          <Button className="btn btn-primary" onClick={scaricaOreInsegnante} disabled={loading || isTutti}>
+          <Button
+            className="btn report-btn-primary"
+            onClick={scaricaOreInsegnante}
+            disabled={loading || isTutti}
+          >
             {loading ? "Scaricamento..." : "📥 Report Insegnante"}
           </Button>
 
-          <button className="btn btn-success" onClick={scaricaReportPdf} disabled={loading}>
+          <button className="btn report-btn-success" onClick={scaricaReportPdf} disabled={loading}>
             {loading ? "Scaricamento..." : "📥 Scarica PDF"}
           </button>
         </div>
 
         {!isTutti && (
           <div className="text-center mb-4">
-            <h5>📘 Insegnante selezionato: {nomeSelezionato}</h5>
+            <h5 style={{ color: '#6366f1', fontWeight: 600 }}>📘 Insegnante selezionato: {nomeSelezionato}</h5>
           </div>
         )}
 
@@ -203,21 +209,21 @@ const Report = () => {
           <div className="alert alert-danger">{error}</div>
         ) : report ? (
           <>
-            <div className="row mb-4">
+            <div className="row mb-4 g-4">
               <div className="col-md-3">
-                <div className="card p-4 text-center shadow">
+                <div className="report-card text-center">
                   <h5>💰 Totale Entrate</h5>
                   <h2>€ {(report.totaleEntrate ?? 0).toFixed(2)}</h2>
                 </div>
               </div>
               <div className="col-md-3">
-                <div className="card p-4 text-center shadow">
+                <div className="report-card text-center">
                   <h5>📉 Totale Uscite</h5>
                   <h2>€ {(report.totaleUscite ?? 0).toFixed(2)}</h2>
                 </div>
               </div>
               <div className="col-md-3">
-                <div className="card p-4 text-center shadow">
+                <div className="report-card text-center">
                   <h5>🕒 Ore Insegnate</h5>
                   <h2>
                     {!isTutti ? data.reduce((acc, curr) => acc + curr.ore, 0) : report.totaleOreInsegnate ?? 0} ore
@@ -226,9 +232,7 @@ const Report = () => {
               </div>
               <div className="col-md-3">
                 <div
-                  className={`card p-4 text-center shadow ${
-                    report.bilancio >= 0 ? "bg-success text-white" : "bg-danger text-white"
-                  }`}
+                  className={`report-card text-center ${report.bilancio >= 0 ? "report-card-success" : "report-card-danger"}`}
                 >
                   <h5>📊 Bilancio</h5>
                   <h2>€ {(report.bilancio ?? 0).toFixed(2)}</h2>
@@ -242,13 +246,14 @@ const Report = () => {
                 <div className="text-center mb-3">
                   <Button
                     variant={showChart.left === "pagamenti" ? "primary" : "outline-primary"}
+                    className={`report-btn-toggle me-2 ${showChart.left === "pagamenti" ? "active" : ""}`}
                     onClick={() => setShowChart({ left: "pagamenti" })}
-                    className="me-2"
                   >
                     💳 Pagamenti per Metodo
                   </Button>
                   <Button
                     variant={showChart.left === "spese" ? "primary" : "outline-primary"}
+                    className={`report-btn-toggle ${showChart.left === "spese" ? "active" : ""}`}
                     onClick={() => setShowChart({ left: "spese" })}
                   >
                     🧾 Spese per Categoria
@@ -314,14 +319,14 @@ const Report = () => {
 
             {report?.oreInsegnate && (
               <div className="container grafico-final mt-5">
-                <h4 className="mb-4 text-start">🧑‍🏫 Ore Insegnate per Insegnante</h4>
+                <h4 className="mb-4 text-start" style={{ color: '#6366f1', fontWeight: 600 }}>🧑‍🏫 Ore Insegnate per Insegnante</h4>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="nome" />
-                    <YAxis allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#a5b4fc" />
+                    <XAxis dataKey="nome" stroke="#6366f1" />
+                    <YAxis allowDecimals={false} stroke="#6366f1" />
                     <Tooltip />
-                    <Bar dataKey="ore" fill="#17a2b8" />
+                    <Bar dataKey="ore" fill="#6366f1" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

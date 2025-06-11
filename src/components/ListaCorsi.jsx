@@ -98,6 +98,13 @@ const ListaCorsi = () => {
     }
   };
 
+  // Inserisco la funzione per formattare la specializzazione (riutilizzo da ListaInsegnanti)
+  const formatSpecialization = (str) => {
+    if (!str) return "";
+    if (str === "UX_UI_Design") return "UX/UI Design";
+    return str.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
   // Filtro corsi in base a card, ricerca e ordinamento
   const getCorsiToShow = () => {
     let corsi = [];
@@ -115,6 +122,10 @@ const ListaCorsi = () => {
           aValue = a.nome.toLowerCase();
           bValue = b.nome.toLowerCase();
           break;
+        case "corsoTipo":
+          aValue = formatSpecialization(a.corsoTipo).toLowerCase();
+          bValue = formatSpecialization(b.corsoTipo).toLowerCase();
+          break;
         case "tipoCorso":
           aValue = a.tipoCorso || "";
           bValue = b.tipoCorso || "";
@@ -122,10 +133,6 @@ const ListaCorsi = () => {
         case "insegnante":
           aValue = (a.insegnante?.nome + " " + a.insegnante?.cognome).toLowerCase();
           bValue = (b.insegnante?.nome + " " + b.insegnante?.cognome).toLowerCase();
-          break;
-        case "livello":
-          aValue = a.livello || "";
-          bValue = b.livello || "";
           break;
         case "studenti":
           aValue = Array.isArray(a.studenti) ? a.studenti.length : 0;
@@ -150,6 +157,13 @@ const ListaCorsi = () => {
   const corsiFiltrati = getCorsiToShow();
   const totalPages = Math.ceil(corsiFiltrati.length / itemsPerPage);
   const paginatedCorsi = corsiFiltrati.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Funzione robusta per capire se un corso è disattivato
+  const isCorsoDisattivato = (corso) => {
+    if (corso.attivo === true) return false;
+    if (typeof corso.attivo === "string" && corso.attivo.toLowerCase() === "true") return false;
+    return true;
+  };
 
   return (
     <>
@@ -244,7 +258,7 @@ const ListaCorsi = () => {
                     }}
                     onClick={apriModaleNuovoCorso}
                   >
-                    Crea Nuovo Corso
+                    Aggiungi corso
                   </button>
                 </div>
               </div>
@@ -258,6 +272,9 @@ const ListaCorsi = () => {
                       <th style={{ cursor: "pointer" }} className="text-center" onClick={() => handleSort("nome")}>
                         Nome Corso{sortBy === "nome" && sortIcons[sortOrder]}
                       </th>
+                      <th style={{ cursor: "pointer" }} className="text-center" onClick={() => handleSort("corsoTipo")}>
+                        Specializzazione{sortBy === "corsoTipo" && sortIcons[sortOrder]}
+                      </th>
                       <th style={{ cursor: "pointer" }} className="text-center" onClick={() => handleSort("tipoCorso")}>
                         Tipo Corso{sortBy === "tipoCorso" && sortIcons[sortOrder]}
                       </th>
@@ -267,9 +284,6 @@ const ListaCorsi = () => {
                         onClick={() => handleSort("insegnante")}
                       >
                         Insegnante{sortBy === "insegnante" && sortIcons[sortOrder]}
-                      </th>
-                      <th style={{ cursor: "pointer" }} className="text-center" onClick={() => handleSort("livello")}>
-                        Livello{sortBy === "livello" && sortIcons[sortOrder]}
                       </th>
                       <th style={{ cursor: "pointer" }} className="text-center" onClick={() => handleSort("studenti")}>
                         Studenti{sortBy === "studenti" && sortIcons[sortOrder]}
@@ -285,94 +299,86 @@ const ListaCorsi = () => {
                         </td>
                       </tr>
                     ) : (
-                      paginatedCorsi.map((corso) => (
-                        <tr key={corso.id}>
-                          <td className="text-center align-middle">
-                            <div className="student-courses-badges horizontal-badges">
-                              <span
-                                className="badge badge-corso bg-primary text-light"
-                                style={{ backgroundColor: "#6c63ff" }}
-                              >
-                                {corso.nome}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="text-center align-middle">
-                            <div className="student-courses-badges horizontal-badges">
-                              <span
-                                className="badge badge-corso text-light"
-                                style={{ backgroundColor: corso.tipoCorso === "DI_GRUPPO" ? "#8B5CF6" : "#F59E42" }}
-                              >
-                                {corso.tipoCorso === "DI_GRUPPO" ? "Di Gruppo" : "Individuale"}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="text-center align-middle">
-                            <span className="fw-bold">
-                              {corso.insegnante?.nome} {corso.insegnante?.cognome}
-                            </span>
-                          </td>
-
-                          <td className="text-center align-middle">
-                            <div className="student-courses-badges horizontal-badges">
-                              <span
-                                className="badge badge-corso text-dark"
-                                style={{
-                                  backgroundColor:
-                                    corso.livello === "Beginner"
-                                      ? "#ffe066"
-                                      : corso.livello === "Junior"
-                                      ? "#d8f3dc"
-                                      : "#b7e4c7",
-                                  color:
-                                    corso.livello === "Beginner"
-                                      ? "#7f4f24"
-                                      : corso.livello === "Junior"
-                                      ? "#2d6a4f"
-                                      : "#1b4332",
-                                }}
-                              >
-                                {corso.livello}
-                              </span>
-                            </div>
-                          </td>
-
-                          <td className="text-center align-middle">
-                            {Array.isArray(corso.studenti) && (corso.aula?.capienza || corso.aula?.capienzaMax) ? (
+                      paginatedCorsi.map((corso) => {
+                        console.log('DEBUG corso:', corso.nome, 'attivo:', corso.attivo);
+                        return (
+                          <tr
+                            key={corso.id}
+                            className={isCorsoDisattivato(corso) ? "row-disattivato" : ""}
+                          >
+                            <td className="text-center align-middle">
+                              <div className="student-courses-badges horizontal-badges">
+                                <span
+                                  className="badge badge-corso bg-primary text-light"
+                                  style={{ backgroundColor: "#6c63ff" }}
+                                >
+                                  {corso.nome}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-center align-middle">
+                              <div className="student-courses-badges horizontal-badges">
+                                <span
+                                  className="badge badge-corso bg-info text-dark"
+                                  style={{ backgroundColor: "#e0e7ff", color: "#222", fontWeight: 600 }}
+                                >
+                                  {formatSpecialization(corso.corsoTipo)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-center align-middle">
+                              <div className="student-courses-badges horizontal-badges">
+                                <span
+                                  className="badge badge-corso text-light"
+                                  style={{ backgroundColor: corso.tipoCorso === "DI_GRUPPO" ? "#8B5CF6" : "#F59E42" }}
+                                >
+                                  {corso.tipoCorso === "DI_GRUPPO" ? "Di Gruppo" : "Individuale"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-center align-middle">
                               <span className="fw-bold">
-                                {corso.studenti.length}/{corso.aula.capienza || corso.aula.capienzaMax}
+                                {corso.insegnante?.nome} {corso.insegnante?.cognome}
                               </span>
-                            ) : (
-                              <span className="text-muted">-</span>
-                            )}
-                          </td>
-
-                          <td className="text-center align-middle">
-                            <div className="actions-pill">
-                              <button
-                                className="btn btn-primary btn-sm"
-                                title="Dettagli"
-                                onClick={() => navigate(`/corsi/${corso.id}`)}
-                              >
-                                <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
-                                  🔍
+                            </td>
+                            <td className="text-center align-middle">
+                              {corso.tipoCorso === "INDIVIDUALE" ? (
+                                <span className="fw-bold">
+                                  {(corso.studenti?.length || 0)}/1
                                 </span>
-                              </button>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                title="Elimina"
-                                onClick={() => eliminaCorso(corso.id)}
-                              >
-                                <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
-                                  🗑️
+                              ) : Array.isArray(corso.studenti) && (corso.aula?.capienza || corso.aula?.capienzaMax) ? (
+                                <span className="fw-bold">
+                                  {corso.studenti.length}/{corso.aula.capienza || corso.aula.capienzaMax}
                                 </span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                              ) : (
+                                <span className="text-muted">-</span>
+                              )}
+                            </td>
+                            <td className="text-center align-middle">
+                              <div className="actions-pill">
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  title="Dettagli"
+                                  onClick={() => navigate(`/corsi/${corso.id}`)}
+                                >
+                                  <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
+                                    🔍
+                                  </span>
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  title="Elimina"
+                                  onClick={() => eliminaCorso(corso.id)}
+                                >
+                                  <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
+                                    🗑️
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -392,92 +398,6 @@ const ListaCorsi = () => {
                 )}
               </div>
             </div>
-
-            <style>{`
-              .studentlist-scroll-area::-webkit-scrollbar {
-                width: 0 !important;
-                height: 0 !important;
-                display: none !important;
-                background: transparent !important;
-              }
-              .studentlist-scroll-area {
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
-              }
-              .studentlist-scroll-area:hover::-webkit-scrollbar {
-                width: 0 !important;
-                height: 0 !important;
-                display: none !important;
-                background: transparent !important;
-              }
-              .studentlist-scroll-area:hover {
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
-              }
-              ::-webkit-scrollbar {
-                width: 0 !important;
-                height: 0 !important;
-                display: none !important;
-                background: transparent !important;
-              }
-              html {
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
-              }
-              .studentlist-pagination-pills {
-                display: flex;
-                gap: 8px;
-                list-style: none;
-                padding: 0;
-                margin: 0;
-              }
-              .studentlist-page-pill {
-                border-radius: 999px;
-                overflow: hidden;
-                transition: box-shadow 0.2s;
-              }
-              .studentlist-page-btn {
-                border: 1.5px solid #6366f1;
-                background: #fff;
-                color: #6366f1;
-                border-radius: 999px;
-                padding: 4px 16px;
-                font-size: 1em;
-                font-weight: 500;
-                transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-                outline: none;
-                cursor: pointer;
-              }
-              .studentlist-page-btn:hover {
-                background: #e0e7ff;
-                color: #3730a3;
-                box-shadow: 0 2px 8px #6366f122;
-              }
-              .studentlist-page-pill.active .studentlist-page-btn {
-                background: #6366f1;
-                color: #fff;
-                border-color: #6366f1;
-                box-shadow: 0 2px 8px #6366f133;
-              }
-              .modern-table tbody tr {
-                height: 64px;
-                max-height: 64px;
-              }
-              .modern-table td {
-                vertical-align: middle !important;
-              }
-              .student-courses-badges.horizontal-badges {
-                min-height: 36px;
-                max-height: 36px;
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                align-items: center;
-                overflow-x: auto;
-                white-space: nowrap;
-                gap: 6px;
-              }
-            `}</style>
 
             <ModaleCorso show={showModale} onHide={() => setShowModale(false)} corso={null} refresh={fetchCorsi} />
           </>

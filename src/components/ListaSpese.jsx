@@ -10,6 +10,7 @@ import it from "date-fns/locale/it";
 import Thinner from "./Thinner";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { formatDateDMY } from "../utils/dateUtils";
 
 registerLocale("it", it);
 
@@ -112,7 +113,7 @@ const ListaSpese = () => {
       console.log("📋 Spese aggiornate:", response.data);
     } catch (error) {
       console.error("❌ Errore nel recupero delle spese", error);
-      setError("Errore nel caricamento delle spese.");
+      setError(error?.response?.data?.message || error?.message || "Errore nel caricamento delle spese.");
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ const ListaSpese = () => {
         sessionStorage.setItem("refreshReport", "true");
       } catch (error) {
         console.error("❌ Errore nella cancellazione della spesa:", error);
-        setError("Errore nella cancellazione della spesa.");
+        setError(error?.response?.data?.message || error?.message || "Errore nella cancellazione della spesa.");
       }
     }
   };
@@ -153,7 +154,7 @@ const ListaSpese = () => {
       if (error.response) {
         console.error("📩 Risposta dal server:", error.response.data);
       }
-      setError(error.response ? JSON.stringify(error.response.data, null, 2) : "Errore generico.");
+      setError(error?.response?.data?.message || error?.message || "Errore generico.");
     }
   };
 
@@ -287,7 +288,7 @@ const ListaSpese = () => {
                   ) : (
                     paginatedSpese.map((spesa) => (
                       <tr key={spesa.id}>
-                        <td>{spesa.dataSpesa}</td>
+                        <td>{formatDateDMY(spesa.dataSpesa)}</td>
                         <td>
                           <span className="fw-bold">€ {spesa.importo}</span>
                         </td>
@@ -302,7 +303,7 @@ const ListaSpese = () => {
                               padding: "0.22em 0.7em",
                               borderRadius: 8,
                               minWidth: 60,
-                              maxWidth: 110,
+                              maxWidth: 150,
                               textAlign: "center",
                               letterSpacing: 0.1,
                               overflow: "hidden",
@@ -370,105 +371,6 @@ const ListaSpese = () => {
           isEditing={false}
         />
       </div>
-      <style>{`
-        .studentlist-scroll-area::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-scroll-area:hover::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area:hover {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        /* Scrollbar globale invisibile */
-        ::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        html {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-pagination-sticky {
-          position: sticky;
-          bottom: 0;
-          background: #fff;
-          z-index: 2;
-          box-shadow: 0 -2px 8px #0001;
-          padding-top: 8px;
-          margin-bottom: -8px;
-        }
-        .studentlist-pagination-pills {
-          display: flex;
-          gap: 8px;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .studentlist-page-pill {
-          border-radius: 999px;
-          overflow: hidden;
-          transition: box-shadow 0.2s;
-        }
-        .studentlist-page-btn {
-          border: 1.5px solid #6366f1;
-          background: #fff;
-          color: #6366f1;
-          border-radius: 999px;
-          padding: 4px 16px;
-          font-size: 1em;
-          font-weight: 500;
-          transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-          outline: none;
-          cursor: pointer;
-        }
-        .studentlist-page-btn:hover {
-          background: #e0e7ff;
-          color: #3730a3;
-          box-shadow: 0 2px 8px #6366f122;
-        }
-        .studentlist-page-pill.active .studentlist-page-btn {
-          background: #6366f1;
-          color: #fff;
-          border-color: #6366f1;
-          box-shadow: 0 2px 8px #6366f133;
-        }
-        /* Altezza fissa per tutte le righe della tabella studenti */
-        .modern-table tbody tr {
-          height: 64px;
-          max-height: 64px;
-        }
-        .modern-table td {
-          vertical-align: middle !important;
-        }
-        /* Impedisco che i badge verticali facciano crescere la riga */
-        .student-courses-badges.vertical-badges {
-          min-height: 36px;
-          max-height: 36px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          overflow-y: hidden;
-          white-space: nowrap;
-          gap: 4px;
-        }
-        /* Se vuoi badge più piccoli, puoi aggiungere qui: */
-        /* .student-courses-badges.vertical-badges .badge { font-size: 0.95em; padding: 4px 10px; } */
-      `}</style>
     </>
   );
 };

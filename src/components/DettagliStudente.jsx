@@ -10,6 +10,7 @@ import FullThinner from "./FullThinner";
 import Thinnerlay from "./Thinnerlay";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { formatDateDMY } from "../utils/dateUtils";
 
 const StudentDetail = () => {
   const { id } = useParams();
@@ -27,6 +28,7 @@ const StudentDetail = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [salvataggioStudenteLoading, setSalvataggioStudenteLoading] = useState(false);
   const [salvataggioPagamentoLoading, setSalvataggioPagamentoLoading] = useState(false);
+  const [studenteDettaglio, setStudenteDettaglio] = useState(null);
 
   const [formStudente, setFormStudente] = useState({
     nome: "",
@@ -116,7 +118,7 @@ const StudentDetail = () => {
       setShowEditModal(false);
       fetchDatiStudente();
     } catch (error) {
-      toast.error("Errore durante il salvataggio.");
+      toast.error(error?.response?.data?.message || error?.message || "Errore durante il salvataggio.");
     } finally {
       setSalvataggioStudenteLoading(false);
     }
@@ -128,7 +130,7 @@ const StudentDetail = () => {
       dataPagamento: new Date(),
       importo: "",
       mensilitaSaldata: "",
-      metodoPagamento: "CARTA",
+      metodoPagamento: "CARTA_DI_CREDITO",
       numeroRicevuta: "",
       note: "",
     });
@@ -142,7 +144,16 @@ const StudentDetail = () => {
       dataPagamento: pagamento.dataPagamento ? new Date(pagamento.dataPagamento) : new Date(),
     });
     setIsEditing(true);
-    setShowModal(true);
+    apiClient
+      .get(`/studenti/${pagamento.studenteId ?? id}`)
+      .then((res) => {
+        setStudenteDettaglio(res.data);
+        setShowModal(true);
+      })
+      .catch(() => {
+        setStudenteDettaglio(null);
+        setShowModal(true);
+      });
   };
 
   const handleEliminaPagamento = async (pagamentoId) => {
@@ -152,7 +163,7 @@ const StudentDetail = () => {
         fetchDatiStudente();
       } catch (error) {
         console.error("❌ Errore nell'eliminazione del pagamento:", error);
-        toast.error("Errore nell'eliminazione del pagamento.");
+        toast.error(error?.response?.data?.message || error?.message || "Errore nell'eliminazione del pagamento.");
       }
     }
   };
@@ -161,22 +172,22 @@ const StudentDetail = () => {
     if (e) e.preventDefault();
 
     if (!pagamentoSelezionato) {
-      toast.error("Errore: nessun pagamento selezionato.");
+      toast.error(error?.response?.data?.message || error?.message || "Errore: nessun pagamento selezionato.");
       return;
     }
 
     const { dataPagamento, importo, mensilitaSaldata, metodoPagamento, numeroRicevuta, note } = pagamentoSelezionato;
 
     if (!importo || parseFloat(importo) <= 0) {
-      toast.error("Inserisci un importo valido.");
+      toast.error(error?.response?.data?.message || error?.message || "Inserisci un importo valido.");
       return;
     }
     if (!mensilitaSaldata) {
-      toast.error("Seleziona la mensilità saldata.");
+      toast.error(error?.response?.data?.message || error?.message || "Seleziona la mensilità saldata.");
       return;
     }
     if (!numeroRicevuta) {
-      toast.error("Inserisci un numero ricevuta valido.");
+      toast.error(error?.response?.data?.message || error?.message || "Inserisci un numero ricevuta valido.");
       return;
     }
 
@@ -212,7 +223,7 @@ const StudentDetail = () => {
         dispatch(logout());
         window.location.href = "/login";
       } else {
-        toast.error(`Errore: ${error.response?.data?.message || "Errore sconosciuto."}`);
+        toast.error(error?.response?.data?.message || error?.message || "Errore sconosciuto.");
       }
     } finally {
       setSalvataggioPagamentoLoading(false);
@@ -239,6 +250,62 @@ const StudentDetail = () => {
         return { bg: "#fb923c", color: "#fff" };
       default:
         return { bg: "#e0e7ff", color: "#222" };
+    }
+  };
+
+  const handleLeaveCourse = async (corsoId) => {
+    if (window.confirm("Vuoi davvero smettere di seguire questo corso?")) {
+      try {
+        await apiClient.delete(`/studenti/${id}/rimuovi-da-corso/${corsoId}`);
+        toast.success("Corso rimosso con successo");
+        fetchDatiStudente();
+      } catch (error) {
+        toast.error("Errore durante la rimozione dal corso.");
+      }
+    }
+  };
+
+  const handleAssegnaCorso = async () => {
+    try {
+      const res = await apiClient.get("/corsi");
+      const corsi = res.data || [];
+      const preferenze = Array.isArray(studente.preferenzaCorso)
+        ? studente.preferenzaCorso
+        : Object.values(studente.preferenzaCorso || {});
+      const giorni = Array.isArray(studente.giorniPreferiti)
+        ? studente.giorniPreferiti
+        : Object.values(studente.giorniPreferiti || {});
+      const fasce = Array.isArray(studente.fasceOrariePreferite)
+        ? studente.fasceOrariePreferite
+        : Object.values(studente.fasceOrariePreferite || {});
+      // Prendi gli id dei corsi già assegnati allo studente
+      const corsiAssegnatiIds = (studente.corsi || []).map(c => c.id);
+      // Filtra i corsi compatibili e NON già assegnati
+      const corsiCompatibili = corsi.filter((corso) => {
+        if (!corso.attivo) return false;
+        const capienza = corso.aula?.capienzaMax || corso.aula?.capienza || 0;
+        if ((corso.studenti?.length || 0) >= capienza) return false;
+        if (!preferenze.includes(corso.corsoTipo)) return false;
+        // Deve essere disponibile in TUTTI i giorni/orari del corso
+        const primoGiornoOk = giorni.includes(corso.giorno) && fasce.includes(corso.orario);
+        let secondoGiornoOk = true;
+        if (corso.secondoGiorno && corso.secondoOrario) {
+          secondoGiornoOk = giorni.includes(corso.secondoGiorno) && fasce.includes(corso.secondoOrario);
+        }
+        // Escludi corsi già assegnati
+        if (corsiAssegnatiIds.includes(corso.id)) return false;
+        return primoGiornoOk && secondoGiornoOk;
+      });
+      if (corsiCompatibili.length === 0) {
+        toast.error("Nessun corso disponibile da assegnare");
+        return;
+      }
+      const corsoDaAssegnare = corsiCompatibili[0];
+      await apiClient.post(`/corsi/${corsoDaAssegnare.id}/aggiungi-studente`, { studenteId: studente.id });
+      toast.success("Corso assegnato con successo");
+      fetchDatiStudente();
+    } catch (error) {
+      toast.error("Errore durante l'assegnazione del corso");
     }
   };
 
@@ -272,7 +339,7 @@ const StudentDetail = () => {
             }}
             onClick={() => navigate("/studenti")}
           >
-            <span style={{ fontSize: "1.2em", marginRight: 8 }}>←</span> Torna alla Lista
+            <span style={{ fontSize: "1.2em", marginRight: 8 }}>←</span> Torna alla Lista Studenti
           </button>
         </div>
 
@@ -290,7 +357,7 @@ const StudentDetail = () => {
                 minWidth: 340,
                 maxWidth: 400,
                 width: "100%",
-                flex: 1,
+                flex: 1.5,
                 marginBottom: 0,
                 minHeight: 520,
                 height: 520,
@@ -309,7 +376,7 @@ const StudentDetail = () => {
               </div>
               <div className="mb-3">
                 <span className="fw-bold">Data Iscrizione:</span>{" "}
-                <span className="fw-semibold">{studente.dataIscrizione}</span>
+                <span className="fw-semibold">{formatDateDMY(studente.dataIscrizione)}</span>
               </div>
               <div className="mb-3">
                 <span className="fw-bold">Preferenze:</span>
@@ -427,7 +494,7 @@ const StudentDetail = () => {
                 minWidth: 420,
                 maxWidth: 600,
                 width: "100%",
-                flex: 1.2,
+                flex: 2.2,
                 background: "#fff",
                 borderRadius: 16,
                 border: "1.5px solid #6366f1",
@@ -513,28 +580,6 @@ const StudentDetail = () => {
                             }}
                           >
                             <button
-                              className="btn btn-primary btn-sm"
-                              style={{
-                                borderRadius: "8px 0 0 8px",
-                                background: "#e0e7ff",
-                                border: "none",
-                                color: "#3b3b8f",
-                                padding: "6px 16px 6px 16px",
-                                outline: "none",
-                                fontSize: "1.1em",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                height: 32,
-                              }}
-                              title="Modifica"
-                              onClick={() => handleModificaPagamento(pagamento)}
-                            >
-                              <span role="img" aria-label="Modifica" style={{ fontSize: "1em" }}>
-                                ✏️
-                              </span>
-                            </button>
-                            <button
                               className="btn btn-danger btn-sm"
                               style={{
                                 borderRadius: "0 8px 8px 0",
@@ -593,6 +638,80 @@ const StudentDetail = () => {
                 </>
               )}
             </motion.div>
+            <motion.div
+              className="shadow-sm d-flex flex-column align-items-center p-4 position-relative"
+              whileHover={{ scale: 1.01, boxShadow: "0 4px 24px #6366f122" }}
+              transition={{ type: "spring", stiffness: 300 }}
+              style={{
+                minWidth: 340,
+                maxWidth: 400,
+                width: "100%",
+                flex: 1,
+                background: "#fff",
+                borderRadius: 16,
+                border: "1.5px solid #6366f1",
+                boxShadow: "0 2px 8px #6366f133",
+                minHeight: 520,
+                height: 520,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-3 w-100">
+                <h4 className="fw-bold mb-0" style={{ letterSpacing: 0.2 }}>
+                  Corsi seguiti
+                </h4>
+              </div>
+              {!studente.corsi || studente.corsi.length === 0 ? (
+                <ul className="list-group list-group-flush w-100">
+                  <li
+                    className="list-group-item text-muted"
+                    style={{
+                      border: "none",
+                      borderBottom: "1px solid #f1f1f1",
+                      padding: "12px 16px",
+                      fontWeight: 500,
+                      fontSize: "1em",
+                    }}
+                  >
+                    Nessun corso seguito
+                  </li>
+                </ul>
+              ) : (
+                <ul className="list-group list-group-flush w-100">
+                  {studente.corsi.map((corso) => (
+                    <li
+                      key={corso.id}
+                      className="list-group-item d-flex justify-content-between align-items-center py-3 px-2"
+                      style={{ border: "none", borderBottom: "1px solid #f1f1f1" }}
+                    >
+                      <span
+                        className={`badge badge-corso me-1 ${corso.attivo ? "bg-success" : "bg-secondary"}`}
+                        title={corso.nome}
+                        style={{ fontWeight: 600, fontSize: "1.08em", letterSpacing: 0.1 }}
+                      >
+                        {corso.nome}
+                      </span>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        title="Smetti di seguire il corso"
+                        style={{ fontSize: "1.2em", borderRadius: 8, padding: "4px 12px" }}
+                        onClick={() => handleLeaveCourse(corso.id)}
+                      >
+                        🚷
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button
+                className="btn btn-primary btn-lg mt-auto mx-auto d-block"
+                style={{ background: "#6366f1", border: "none", fontWeight: 500, letterSpacing: 0.2, marginTop: 32 }}
+                onClick={handleAssegnaCorso}
+              >
+                ➕ Assegna corso
+              </button>
+            </motion.div>
           </div>
         )}
       </div>
@@ -605,6 +724,8 @@ const StudentDetail = () => {
         isEditing={isEditing}
         handleSubmit={handleSubmit}
         disableStudentSelect={true}
+        studenti={isEditing ? (studenteDettaglio ? [studenteDettaglio] : []) : studente ? [studente] : []}
+        pagamentiStudente={pagamenti}
       />
 
       <div className="position-relative">
@@ -618,52 +739,6 @@ const StudentDetail = () => {
           loading={salvataggioStudenteLoading}
         />
       </div>
-
-      <style>{`
-        .stat-card {
-          transition: box-shadow 0.18s, border 0.18s;
-        }
-        .stat-card:hover {
-          box-shadow: 0 4px 24px #6366f122 !important;
-          border-color: #6366f1 !important;
-        }
-        .studentlist-pagination-pills {
-          display: flex;
-          gap: 8px;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .studentlist-page-pill {
-          border-radius: 999px;
-          overflow: hidden;
-          background: #fff;
-          box-shadow: 0 1px 4px #0001;
-          transition: background 0.15s;
-          border: 1.5px solid #6366f1;
-        }
-        .studentlist-page-pill.active {
-          background: #6366f1 !important;
-          border: none;
-        }
-        .studentlist-page-btn {
-          border: none;
-          background: transparent;
-          color: #222;
-          font-weight: 500;
-          font-size: 1.1em;
-          padding: 6px 18px;
-          border-radius: 999px;
-          outline: none;
-          cursor: pointer;
-        }
-        .studentlist-page-pill.active .studentlist-page-btn {
-          background: #6366f1 !important;
-          color: #fff;
-          border-color: #6366f1 !important;
-          box-shadow: 0 2px 8px #6366f133;
-        }
-      `}</style>
     </>
   );
 };

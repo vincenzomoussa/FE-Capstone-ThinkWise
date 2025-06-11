@@ -2,12 +2,15 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
 import { useState } from "react";
+import apiClient from "../utils/apiClient";
 
 const ThinkBar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuAperto, setMenuAperto] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -17,16 +20,29 @@ const ThinkBar = () => {
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + "/");
 
   const navLinks = [
-    { path: "/Overview", icon: "📊", label: "ThinkBoard" },
-    { path: "/studenti", icon: "🎓", label: "Studenti" },
-    { path: "/corsi", icon: "📚", label: "Corsi" },
-    { path: "/insegnanti", icon: "👨‍🏫", label: "Insegnanti" },
-    { path: "/aule", icon: "🏢", label: "Aule" },
-    { path: "/spese", icon: "💰", label: "Spese" },
-    { path: "/pagamenti", icon: "💳", label: "Pagamenti" },
-    { path: "/calendario", icon: "📅", label: "Calendario" },
-    { path: "/report", icon: "📄", label: "Report" },
+    { path: "/Overview", label: "ThinkBoard" },
+    { path: "/studenti", label: "Studenti" },
+    { path: "/corsi", label: "Corsi" },
+    { path: "/insegnanti", label: "Insegnanti" },
+    { path: "/aule", label: "Aule" },
+    { path: "/spese", label: "Spese" },
+    { path: "/pagamenti", label: "Pagamenti" },
+    { path: "/calendario", label: "Calendario" },
+    { path: "/report", label: "Report" },
   ];
+
+  const handleGenerateData = async () => {
+    try {
+      setLoading(true);
+      await apiClient.post("/generate-data");
+      window.location.reload(); // Ricarica la pagina per aggiornare i dati ovunque
+    } catch (err) {
+      setError("Errore nella generazione dei dati. Riprova più tardi.");
+      alert("Errore nella generazione dei dati. Riprova più tardi.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <nav className="navbar fixed-top">
@@ -34,20 +50,41 @@ const ThinkBar = () => {
         <Link
           to="/dashboard"
           className="navbar-brand d-flex align-items-center"
-          style={{ minWidth: 70, minHeight: 48 }}
+          style={{ minWidth: 70, minHeight: 48, cursor: loading ? "wait" : "pointer" }}
+          onClick={(e) => {
+            e.preventDefault();
+            if (!loading) handleGenerateData();
+          }}
+          title="Clicca per generare dati di esempio"
         >
-          <img
-            src="https://images.squarespace-cdn.com/content/v1/5e34540355a1d92e3ad13e6f/1591966507838-TLS3XL0LPBTRPZMDDBCW/LOGO_WEB1X1_png.png?format=1500w"
-            alt="Dashboard"
+          <svg
+            width="70"
+            height="56"
+            viewBox="0 0 140 96"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
             style={{
-              height: 48,
-              width: 56,
+              height: 56,
+              width: 70,
               objectFit: "contain",
-              borderRadius: 10,
-              background: "#ede9fe",
-              boxShadow: "0 2px 8px #6366f122",
+              display: "block",
             }}
-          />
+          >
+            <text
+              x="16"
+              y="74"
+              fontFamily="'Cinzel', serif"
+              fontWeight="bold"
+              fontSize="68"
+              fill="#6366f1"
+              letterSpacing="-6"
+            >
+              TW
+            </text>
+          </svg>
+          <span style={{ minWidth: 24, display: "inline-block", marginLeft: 8, textAlign: "center" }}>
+            {loading ? <span style={{ fontSize: 18, color: "#6366f1" }}>⏳</span> : null}
+          </span>
         </Link>
         <div className="d-none d-lg-flex flex-grow-1 justify-content-center nav-links-custom">
           {navLinks.map(({ path, icon, label }) => (

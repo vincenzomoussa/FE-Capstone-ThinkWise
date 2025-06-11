@@ -11,6 +11,7 @@ import it from "date-fns/locale/it";
 import Thinner from "./Thinner";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { formatDateDMY } from "../utils/dateUtils";
 
 registerLocale("it", it);
 
@@ -44,10 +45,22 @@ const ListaPagamenti = () => {
   // Filtro testuale per nome/cognome studente
   const [filtroNome, setFiltroNome] = useState("");
 
+  const [pagamentiStudenteSelezionato, setPagamentiStudenteSelezionato] = useState([]);
+
   useEffect(() => {
     fetchPagamenti();
     fetchStudenti();
   }, [anno, mese, studenteId]);
+
+  useEffect(() => {
+    if (formData.studenteId) {
+      setPagamentiStudenteSelezionato(
+        pagamenti.filter((p) => String(p.studenteId ?? p.studente?.id) === String(formData.studenteId))
+      );
+    } else {
+      setPagamentiStudenteSelezionato([]);
+    }
+  }, [formData.studenteId, pagamenti]);
 
   const fetchPagamenti = async () => {
     setLoading(true);
@@ -57,7 +70,7 @@ const ListaPagamenti = () => {
       });
       setPagamenti(response.data);
     } catch (error) {
-      setError("Errore nel caricamento dei pagamenti.", error);
+      setError(error?.response?.data?.message || error?.message || "Errore nel caricamento dei pagamenti.");
     } finally {
       setLoading(false);
     }
@@ -69,7 +82,11 @@ const ListaPagamenti = () => {
       setStudenti(response.data);
     } catch (error) {
       console.error("❌ Errore nel recupero degli studenti:", error);
-      setError("Errore nel recupero degli studenti. Controlla la connessione o l'endpoint.");
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Errore nel recupero degli studenti. Controlla la connessione o l'endpoint."
+      );
     }
   };
 
@@ -105,8 +122,14 @@ const ListaPagamenti = () => {
       }
     } catch (error) {
       console.error("❌ Errore:", error);
-      toast.error("Errore durante il salvataggio del pagamento.");
-      setError(error.response?.data?.message || "Errore generico.");
+      const backendMsg =
+        error?.response?.data?.message || error?.message || "Errore durante il salvataggio del pagamento.";
+      if (backendMsg.includes("Non è possibile pagare un mese precedente alla data di iscrizione")) {
+        toast.error("Non è possibile pagare un mese precedente alla data di iscrizione");
+      } else {
+        toast.error(backendMsg);
+      }
+      setError(backendMsg);
     }
   };
 
@@ -119,7 +142,7 @@ const ListaPagamenti = () => {
         sessionStorage.setItem("refreshReport", "true"); // Flag per report
       } catch (error) {
         console.error("❌ Errore nella cancellazione del pagamento:", error);
-        setError("Errore nella cancellazione del pagamento.");
+        setError(error?.response?.data?.message || error?.message || "Errore nella cancellazione del pagamento.");
       }
     }
   };
@@ -159,6 +182,33 @@ const ListaPagamenti = () => {
     } else if (sortBy === "dataPagamento") {
       aValue = new Date(aValue);
       bValue = new Date(bValue);
+    } else if (sortBy === "mensilitaSaldata") {
+      // Parsing: "mese anno" (es: "gennaio 2025")
+      const parseMensilita = (str) => {
+        if (!str) return { year: 0, month: 0 };
+        const [mese, anno] = str.split(" ");
+        const mesi = [
+          "gennaio",
+          "febbraio",
+          "marzo",
+          "aprile",
+          "maggio",
+          "giugno",
+          "luglio",
+          "agosto",
+          "settembre",
+          "ottobre",
+          "novembre",
+          "dicembre",
+        ];
+        const m = mesi.indexOf(mese.toLowerCase());
+        return { year: parseInt(anno), month: m };
+      };
+      const av = parseMensilita(aValue);
+      const bv = parseMensilita(bValue);
+      if (av.year !== bv.year) return sortOrder === "asc" ? av.year - bv.year : bv.year - av.year;
+      if (av.month !== bv.month) return sortOrder === "asc" ? av.month - bv.month : bv.month - av.month;
+      return 0;
     } else {
       aValue = (aValue || "").toString().toLowerCase();
       bValue = (bValue || "").toString().toLowerCase();
@@ -209,6 +259,33 @@ const ListaPagamenti = () => {
       } else if (sortBy === "dataPagamento") {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
+      } else if (sortBy === "mensilitaSaldata") {
+        // Parsing: "mese anno" (es: "gennaio 2025")
+        const parseMensilita = (str) => {
+          if (!str) return { year: 0, month: 0 };
+          const [mese, anno] = str.split(" ");
+          const mesi = [
+            "gennaio",
+            "febbraio",
+            "marzo",
+            "aprile",
+            "maggio",
+            "giugno",
+            "luglio",
+            "agosto",
+            "settembre",
+            "ottobre",
+            "novembre",
+            "dicembre",
+          ];
+          const m = mesi.indexOf(mese.toLowerCase());
+          return { year: parseInt(anno), month: m };
+        };
+        const av = parseMensilita(aValue);
+        const bv = parseMensilita(bValue);
+        if (av.year !== bv.year) return sortOrder === "asc" ? av.year - bv.year : bv.year - av.year;
+        if (av.month !== bv.month) return sortOrder === "asc" ? av.month - bv.month : bv.month - av.month;
+        return 0;
       } else {
         aValue = (aValue || "").toString().toLowerCase();
         bValue = (bValue || "").toString().toLowerCase();
@@ -346,7 +423,27 @@ const ListaPagamenti = () => {
                   width: "100%",
                 }}
                 onClick={() => {
-                  resetFormData();
+                  // Logica: se c'è uno studente filtrato, preimposta formData.studenteId
+                  let preselectId = "";
+                  if (studenteId) {
+                    preselectId = studenteId;
+                  } else if (filtroNome.trim()) {
+                    const match = studenti.filter(s =>
+                      `${s.nome} ${s.cognome}`.toLowerCase().includes(filtroNome.trim().toLowerCase())
+                    );
+                    if (match.length === 1) preselectId = match[0].id;
+                  }
+                  setFormData({
+                    id: "",
+                    studenteId: preselectId,
+                    dataPagamento: new Date(),
+                    importo: "",
+                    mensilitaSaldata: "",
+                    metodoPagamento: "CARTA_DI_CREDITO",
+                    numeroRicevuta: "",
+                    note: "",
+                  });
+                  setIsEditing(false);
                   setShowModal(true);
                 }}
               >
@@ -395,7 +492,7 @@ const ListaPagamenti = () => {
                   ) : (
                     paginatedPagamenti.map((pagamento) => (
                       <tr key={pagamento.id}>
-                        <td>{pagamento.dataPagamento}</td>
+                        <td>{formatDateDMY(pagamento.dataPagamento)}</td>
                         <td>
                           <span className="fw-bold">€ {pagamento.importo}</span>
                         </td>
@@ -414,7 +511,7 @@ const ListaPagamenti = () => {
                               padding: "0.22em 0.7em",
                               borderRadius: 8,
                               minWidth: 60,
-                              maxWidth: 120,
+                              maxWidth: 170,
                               textAlign: "center",
                               letterSpacing: 0.1,
                               overflow: "hidden",
@@ -492,83 +589,10 @@ const ListaPagamenti = () => {
           handleSubmit={handleSubmit}
           studenti={studenti}
           handleChange={handleChange}
+          pagamentiStudente={pagamentiStudenteSelezionato}
+          pagamenti={pagamenti}
         />
       </div>
-
-      <style>{`
-        .studentlist-scroll-area::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-scroll-area:hover::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area:hover {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        ::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        html {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-pagination-pills {
-          display: flex;
-          gap: 8px;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .studentlist-page-pill {
-          border-radius: 999px;
-          overflow: hidden;
-          transition: box-shadow 0.2s;
-        }
-        .studentlist-page-btn {
-          border: 1.5px solid #6366f1;
-          background: #fff;
-          color: #6366f1;
-          border-radius: 999px;
-          padding: 4px 16px;
-          font-size: 1em;
-          font-weight: 500;
-          transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-          outline: none;
-          cursor: pointer;
-        }
-        .studentlist-page-btn:hover {
-          background: #e0e7ff;
-          color: #3730a3;
-          box-shadow: 0 2px 8px #6366f122;
-        }
-        .studentlist-page-pill.active .studentlist-page-btn {
-          background: #6366f1;
-          color: #fff;
-          border-color: #6366f1;
-          box-shadow: 0 2px 8px #6366f133;
-        }
-        .modern-table tbody tr {
-          height: 64px;
-          max-height: 64px;
-        }
-        .modern-table td {
-          vertical-align: middle !important;
-        }
-      `}</style>
     </>
   );
 };

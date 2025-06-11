@@ -7,18 +7,12 @@ $colore-grigio: #d1d1d1;
 $colore-grigio-medio: #888888;
 $colore-grigio-scuro: #444444;
 $colore-nero: #000000;
-
-// Colori primari e secondari per un look moderno
 $primary-color: $colore-nero;
 $secondary-color: $colore-grigio-scuro;
 $background-light: $colore-grigio-chiaro;
 $text-dark: $colore-nero;
 $text-light: $colore-bianco;
 $border-color: $colore-grigio;
-
-// =======================
-// 🎨 VARIABILI
-// =======================
 $colore-sfondo: #bcc89c;
 $colore-sabbia: #e7cb9e;
 $colore-marrone: #cc9c77;
@@ -401,13 +395,13 @@ input[type="checkbox"],
 
 .btn-outline-primary {
   background-color: transparent;
-  border-color: $primary-color;
-  color: $primary-color;
+  border-color: green;
+  color: green;
 
   &:hover {
-    background-color: $primary-color;
+    background-color: green;
     color: $text-light;
-    border-color: $primary-color;
+    border-color: green;
   }
 }
 
@@ -504,68 +498,60 @@ input[type="checkbox"],
 }
 
 .calendario-cella-vuota {
-  background-color: $colore-sabbia;
-  color: $colore-verde-scuro;
-  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 8px;
   padding: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-align: center;
   font-weight: 500;
-  opacity: 0.7;
-  transition: background-color 0.2s ease;
-
+  opacity: 0.8;
+  border: 1.5px dashed #a5b4fc;
+  transition: background 0.2s;
   &:hover {
-    background-color: lighten($colore-sabbia, 5%);
+    background: #e0e7ff;
   }
 }
 
-.calendario-cella-piena {
-  color: white;
-  background-color: $colore-verde-intenso;
+.calendario-cella-moderna {
+  background: linear-gradient(135deg, #6366f1 60%, #a5b4fc 100%);
+  color: #fff;
   border-radius: 10px;
-  padding: 10px 12px;
+  box-shadow: 0 2px 8px #6366f133;
+  padding: 14px 18px;
+  font-size: 1rem;
+  font-weight: 500;
   margin-bottom: 6px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
   cursor: pointer;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  white-space: pre-line;
-  animation: fadeInSlide 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  position: relative;
-
+  gap: 4px;
+  border: none;
+  outline: none;
+  /* Rimuovo overflow per eliminare scroll verticale */
+  overflow: unset;
+  max-height: unset;
   &:hover {
-    transform: scale(1.01);
+    background: linear-gradient(135deg, #818cf8 60%, #6366f1 100%);
+    box-shadow: 0 4px 16px #6366f144;
+    transform: scale(1.02);
   }
-
-  &:focus {
-    outline: 2px dashed $colore-sabbia;
-    outline-offset: 3px;
-  }
-
   strong {
+    font-size: 1.08em;
     font-weight: 700;
-    display: block;
+    color: #fff;
     margin-bottom: 2px;
-    color: $colore-sabbia;
-    font-size: 1rem;
+    letter-spacing: 0.01em;
   }
-
   span {
-    color: white;
-    font-size: 0.85rem;
-    display: block;
-  }
-
-  &.corso-privato {
-    background-color: $colore-privato !important;
-  }
-
-  &.corso-gruppo {
-    background-color: $colore-gruppo !important;
+    color: #f3f4f6;
+    font-size: 0.93em;
+    border-radius: 8px;
+    padding: 1px 0;
+    background: rgba(255, 255, 255, 0.07);
+    margin-bottom: 1px;
+    font-weight: 400;
   }
 }
 
@@ -592,50 +578,91 @@ input[type="checkbox"],
   }
 }
 
-.table.calendario-table {
+.calendario-moderna {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f8fafc;
+  box-shadow: 0 4px 24px #6366f122;
+  border: none;
   thead th {
-    background-color: $colore-verde-intenso;
-    color: white;
+    background: linear-gradient(90deg, #6366f1 60%, #a5b4fc 100%);
+    color: #fff;
     text-align: center;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1.08rem;
+    border: none;
+    letter-spacing: 0.01em;
+    padding: 14px 0;
   }
-
   tbody td {
     vertical-align: top;
     min-width: 160px;
     height: 140px;
     padding: 10px;
     text-align: left;
-    background-color: white;
-    overflow-y: auto;
+    background: #fff;
+    border: none;
+    border-bottom: 1.5px solid #e0e7ff;
+    border-right: 1.5px solid #e0e7ff;
+    overflow-y: unset;
+    overflow: unset;
     scrollbar-width: thin;
-    scrollbar-color: $colore-verde-intenso transparent;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: $colore-verde-intenso;
-      border-radius: 4px;
+    scrollbar-color: #a5b4fc transparent;
+    &:first-child {
+      background: #f1f5f9;
+      color: #222;
+      font-weight: 700;
+      text-align: center;
+      border-right: 1.5px solid #e0e7ff;
     }
   }
-
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-
-    tbody td {
-      min-width: auto;
-      height: auto;
-      padding: 6px;
-    }
-
-    .calendario-cella-piena {
-      font-size: 0.8rem;
-      padding: 6px 8px;
-    }
+  tbody tr:last-child td {
+    border-bottom: none;
   }
+}
+
+.calendario-moderna-fissa {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  table-layout: fixed;
+  min-height: 800px;
+  height: 600px;
+}
+
+.calendario-cella-vuota-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.calendario-orari-colonna {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  font-weight: 700;
+  font-size: 1.08em;
+  border-right: 2px solid #a5b4fc !important;
+  border-bottom: 1.5px solid #a5b4fc !important;
+  border-left: none !important;
+  border-top: none !important;
+}
+
+.calendario-moderna thead th,
+.calendario-moderna tbody td {
+  border: none !important;
+  border-right: 1.5px solid #a5b4fc !important;
+  border-bottom: 1.5px solid #a5b4fc !important;
+}
+
+.calendario-moderna thead th:last-child,
+.calendario-moderna tbody td:last-child {
+  border-right: none !important;
+}
+
+.calendario-moderna tbody tr:last-child td {
+  border-bottom: none !important;
 }
 
 // =======================
@@ -843,7 +870,7 @@ h5 {
   }
 }
 .Toastify__toast-container--top-left {
-  top: 4rem !important;
+  top: 5rem !important;
 }
 
 .Toastify__toast {
@@ -1011,12 +1038,6 @@ h5 {
   color: #1e293b !important;
 }
 
-.btn-primary {
-  background: #6366f1;
-  border-color: #6366f1;
-  color: #fff;
-  font-weight: 600;
-}
 .btn-primary:hover,
 .btn-primary:focus {
   background: #4f46e5;
@@ -1072,7 +1093,7 @@ h5 {
   padding: 0.25em 0.7em;
   border-radius: 8px;
   margin-bottom: 2px;
-  max-width: 110px;
+  max-width: 170px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1142,31 +1163,7 @@ h5 {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
-.studentlist-page-pill {
-  display: inline-block;
-  margin: 0 2px;
-  border-radius: 999px;
-  background: #f3f4f6;
-  box-shadow: 0 1px 4px #0001;
-  transition: background 0.15s;
-}
-.studentlist-page-pill.active {
-  background: #6366f1;
-}
-.studentlist-page-btn {
-  border: none;
-  background: transparent;
-  color: #222;
-  font-weight: 500;
-  font-size: 1.1em;
-  padding: 6px 18px;
-  border-radius: 999px;
-  outline: none;
-  cursor: pointer;
-}
-.studentlist-page-pill.active .studentlist-page-btn {
-  color: #fff;
-}
+
 .actions-pill {
   display: inline-flex;
   box-shadow: 0 1px 4px #0001;
@@ -1203,15 +1200,819 @@ h5 {
   padding-right: 0.5rem;
 }
 
-.studentlist-page-pill {
-  border-radius: 999px;
-  overflow: hidden;
-  transition: box-shadow 0.2s;
+.card {
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+
+.card {
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+
+.card {
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.card {
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.stat-card {
+  transition: box-shadow 0.18s, border 0.18s;
+}
+.stat-card:hover {
+  box-shadow: 0 4px 24px #6366f122 !important;
+  border-color: #6366f1 !important;
 }
 
 .studentlist-page-pill.active .studentlist-page-btn {
   background: #6366f1;
   color: #fff;
+}
+.custom-modal-aula .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-aula .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-aula .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-aula .form-control:focus {
   border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-aula .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+.custom-modal-aula .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-aula .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-aula .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-aula .form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-aula .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+.studentlist-scroll-area::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+.studentlist-scroll-area {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.studentlist-scroll-area:hover::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+.studentlist-scroll-area:hover {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+html {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.modern-table tbody tr {
+  height: 64px;
+  max-height: 64px;
+}
+.modern-table td {
+  vertical-align: middle !important;
+}
+.student-courses-badges.horizontal-badges {
+  min-height: 36px;
+  max-height: 36px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 6px;
+}
+.studentlist-scroll-area::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+.studentlist-scroll-area {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.studentlist-scroll-area:hover::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+.studentlist-scroll-area:hover {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+/* Scrollbar globale invisibile */
+::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+html {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.studentlist-pagination-sticky {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  z-index: 2;
+  box-shadow: 0 -2px 8px #0001;
+  padding-top: 8px;
+  margin-bottom: -8px;
+}
+.studentlist-pagination-pills {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.studentlist-page-btn {
+  border: 1.5px solid #6366f1;
+  background: #fff;
+  color: #6366f1;
+  border-radius: 999px;
+  padding: 4px 16px;
+  font-size: 1em;
+  font-weight: 700;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Altezza fissa per tutte le righe della tabella studenti */
+.modern-table tbody tr {
+  height: 64px;
+  max-height: 64px;
+}
+.modern-table td {
+  vertical-align: middle !important;
+}
+/* Impedisco che i badge verticali facciano crescere la riga */
+.student-courses-badges.vertical-badges {
+  min-height: 36px;
+  max-height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow-y: hidden;
+  white-space: nowrap;
+  gap: 4px;
+}
+.student-courses-badges.vertical-badges .badge {
+  font-size: 0.95em;
+  padding: 4px 10px;
+}
+.custom-modal-insegnante .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-insegnante .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-insegnante .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-insegnante .form-control:focus,
+.custom-modal-insegnante .form-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-insegnante .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+.custom-modal-pagamento .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-pagamento .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-pagamento .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-pagamento .form-control:focus,
+.custom-modal-pagamento .form-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-pagamento .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+.custom-modal-spesa .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-spesa .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-spesa .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-spesa .form-control:focus,
+.custom-modal-spesa .form-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-spesa .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+.custom-modal-studente .modal-content {
+  border-radius: 16px !important;
+  border: 2px solid #6366f1 !important;
+  box-shadow: 0 4px 24px #6366f122 !important;
+}
+.custom-modal-studente .modal-header {
+  border-radius: 16px 16px 0 0 !important;
+}
+.custom-modal-studente .modal-body {
+  border-radius: 0 0 16px 16px !important;
+}
+.custom-modal-studente .form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.custom-modal-studente .form-label {
+  font-weight: 700;
+  color: #3730a3;
+}
+
+// =======================
+// LOGIN MODERNA COLORATA
+// =======================
+.login-bg-gradient,
+.login-gradient-wrapper {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(120deg, #6366f1 0%, #60a5fa 50%, #a78bfa 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.login-gradient-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+.login-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.18;
+  z-index: 2;
+  filter: blur(2px);
+  pointer-events: none;
+}
+.login-blob-1 {
+  width: 340px;
+  height: 340px;
+  background: #ffe066;
+  top: -80px;
+  left: -100px;
+}
+.login-blob-2 {
+  width: 260px;
+  height: 260px;
+  background: #fb923c;
+  bottom: -60px;
+  right: -80px;
+}
+.login-blob-3 {
+  width: 180px;
+  height: 180px;
+  background: #22c55e;
+  top: 60px;
+  right: 10vw;
+}
+.login-card-modern {
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  border: 2.5px solid #6366f1;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px #6366f133, 0 2px 8px #a78bfa22;
+  padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+  max-width: 410px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: loginCardFadeIn 0.7s cubic-bezier(0.4, 1.4, 0.6, 1) 0.1s both;
+}
+@keyframes loginCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.login-logo-modern {
+  width: 110px;
+  margin-bottom: 0.5rem;
+  border-radius: 16px;
+  background: #ede9fe;
+  box-shadow: 0 2px 8px #6366f122;
+}
+.login-title-modern {
+  font-family: "Cinzel", serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #6366f1;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.login-form-modern {
+  width: 100%;
+}
+.login-label-modern {
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: 0.01em;
+}
+.login-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+.login-input-modern {
+  border-radius: 12px;
+  border: 1.5px solid #a78bfa;
+  font-weight: 500;
+  font-size: 1.08em;
+  padding-right: 2.5rem;
+  transition: border 0.18s, box-shadow 0.18s;
+}
+.login-input-modern:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #6366f155;
+}
+.login-eye-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #a78bfa;
+  transition: color 0.18s;
+  z-index: 3;
+}
+.login-eye-icon:hover,
+.login-eye-icon:focus {
+  color: #6366f1;
+}
+.login-btn-modern {
+  background: linear-gradient(90deg, #6366f1 60%, #a78bfa 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.13em;
+  border: none;
+  border-radius: 12px;
+  margin-top: 0.5rem;
   box-shadow: 0 2px 8px #6366f133;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.login-btn-modern:hover,
+.login-btn-modern:focus {
+  background: linear-gradient(90deg, #a78bfa 0%, #6366f1 100%);
+  color: #ffe066;
+  box-shadow: 0 4px 16px #6366f144;
+}
+.login-alert-modern {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.01em;
+  margin-bottom: 1.1rem;
+  background: #ffe06622;
+  color: #b91c1c;
+  border: 1.5px solid #ffe066;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .login-card-modern {
+    padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+    max-width: 98vw;
+  }
+  .login-logo-modern {
+    width: 80px;
+  }
+  .login-title-modern {
+    font-size: 1.2rem;
+  }
+}
+
+// =======================
+// LOGIN SCUOLA COLORATA (VARIANTE 2)
+// =======================
+.login-bg-white,
+.login-white-wrapper {
+  min-height: 100vh;
+  width: 100vw;
+  background: #fff !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.login-white-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+.login-deco {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.login-deco-top-left {
+  top: 0;
+  left: 0;
+}
+.login-deco-bottom-right {
+  bottom: 0;
+  right: 0;
+}
+.login-deco-bottom-left {
+  bottom: 0;
+  left: 0;
+}
+.login-card-school {
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  border: 2.5px solid #6366f1;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px #6366f133, 0 2px 8px #a78bfa22;
+  padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+  max-width: 410px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: loginCardFadeIn 0.7s cubic-bezier(0.4, 1.4, 0.6, 1) 0.1s both;
+}
+@media (max-width: 600px) {
+  .login-card-school {
+    padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+    max-width: 98vw;
+  }
+}
+
+// =======================
+// LOGIN SPLIT SCREEN (VARIANTE 3)
+// =======================
+.login-bg-split,
+.login-split-wrapper {
+  min-height: 100vh;
+  width: 100vw;
+  background: #fff !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.login-split-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+.login-split-illustration {
+  flex: 1.2;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, #f3f4f6 0%, #e0e7ff 100%);
+  border-right: 2.5px solid #6366f1;
+  box-shadow: 8px 0 32px #6366f111;
+  position: relative;
+  z-index: 2;
+}
+.login-split-card-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 3;
+  background: #fff;
+}
+.login-card-split {
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  border: 2.5px solid #6366f1;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px #6366f133, 0 2px 8px #a78bfa22;
+  padding: 2.5rem 2.2rem 2.2rem 2.2rem;
+  max-width: 410px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: loginCardFadeIn 0.7s cubic-bezier(0.4, 1.4, 0.6, 1) 0.1s both;
+}
+@media (max-width: 900px) {
+  .login-split-wrapper {
+    flex-direction: column;
+  }
+  .login-split-illustration {
+    min-height: 180px;
+    border-right: none;
+    border-bottom: 2.5px solid #6366f1;
+    box-shadow: 0 8px 32px #6366f111;
+  }
+  .login-split-card-col {
+    min-height: 320px;
+  }
+}
+@media (max-width: 600px) {
+  .login-card-split {
+    padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+    max-width: 98vw;
+  }
+  .login-split-illustration {
+    display: none;
+  }
+}
+
+// =======================
+// LOGIN BOX RICCA (VARIANTE 3 ARRICCHITA)
+// =======================
+.login-card-rich {
+  position: relative;
+}
+.login-badge-admin {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  background: linear-gradient(90deg, #6366f1 60%, #a78bfa 100%);
+  color: #ffe066;
+  font-weight: 700;
+  font-size: 0.98em;
+  padding: 4px 16px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px #6366f133;
+  letter-spacing: 0.08em;
+  z-index: 20;
+  border: 2px solid #fff;
+}
+.login-subtitle {
+  font-size: 1.08em;
+  color: #6366f1;
+  font-weight: 500;
+  margin-top: 0.2rem;
+  margin-bottom: 0.7rem;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.login-divider-color {
+  width: 60px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #6366f1 60%, #ffe066 100%);
+  margin: 0 auto 1.1rem auto;
+}
+.login-title-illu-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.login-micro-illu {
+  display: flex;
+  align-items: center;
+  margin-top: -25px;
+  height: 100%;
+  vertical-align: middle;
+}
+.login-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6366f1;
+  opacity: 0.85;
+  z-index: 3;
+}
+.login-input-withicon {
+  padding-left: 2.2rem !important;
+}
+.login-forgot-link-row {
+  width: 100%;
+  text-align: right;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+.login-forgot-link {
+  color: #a78bfa;
+  font-size: 0.98em;
+  text-decoration: underline dotted;
+  opacity: 0.85;
+  transition: color 0.18s, opacity 0.18s;
+  cursor: pointer;
+}
+.login-forgot-link:hover,
+.login-forgot-link:focus {
+  color: #6366f1;
+  opacity: 1;
+}
+.login-mini-footer {
+  width: 100%;
+  text-align: center;
+  font-size: 0.93em;
+  color: #a1a1aa;
+  margin-top: 1.2rem;
+  letter-spacing: 0.01em;
+}
+
+.login-slogan-left {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  width: 100%;
+  text-align: right;
+  font-family: "Cinzel", serif;
+  font-size: clamp(1.1rem, 2.5vw, 2.1rem);
+  font-weight: 700;
+  color: #6366f1;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  background: linear-gradient(90deg, #6366f1 60%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  z-index: 10;
+  padding-right: 0.5rem;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 900px) {
+  .login-slogan-left {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    width: 100%;
+    top: 18px;
+  }
+}
+@media (max-width: 600px) {
+  .login-slogan-left {
+    display: none;
+  }
+}
+
+.row-disattivato,
+.row-disattivato td {
+  background-color: #ffe066 !important;
+}
+
+.report-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px #6366f122;
+  padding: 28px 18px 18px 18px;
+  margin-bottom: 12px;
+  border: none;
+  color: #222;
+  font-weight: 500;
+  transition: box-shadow 0.2s, transform 0.15s;
+  min-height: 120px;
+  h5 {
+    color: #6366f1;
+    font-weight: 600;
+    font-size: 1.08em;
+    margin-bottom: 10px;
+  }
+  h2 {
+    font-size: 2.1em;
+    font-weight: 700;
+    margin: 0;
+    color: #3730a3;
+  }
+}
+.report-card-success {
+  background: linear-gradient(90deg, #4ade80 60%, #a7f3d0 100%);
+  color: #065f46 !important;
+  h2 { color: #065f46 !important; }
+}
+.report-card-danger {
+  background: linear-gradient(90deg, #f87171 60%, #fca5a5 100%);
+  color: #991b1b !important;
+  h2 { color: #991b1b !important; }
+}
+.report-btn-primary {
+  background: #6366f1 !important;
+  color: #fff !important;
+  border: none;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 8px 18px;
+  transition: background 0.18s;
+  &:hover, &:focus { background: #3730a3 !important; color: #fff !important; }
+}
+.report-btn-success {
+  background: #22d3ee !important;
+  color: #222 !important;
+  border: none;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 8px 18px;
+  transition: background 0.18s;
+  &:hover, &:focus { background: #0e7490 !important; color: #fff !important; }
+}
+.report-btn-toggle {
+  border-radius: 10px !important;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: 2px solid #6366f1 !important;
+  background: #fff !important;
+  color: #6366f1 !important;
+  margin-bottom: 8px;
+  &.active, &:hover, &:focus {
+    background: #6366f1 !important;
+    color: #fff !important;
+  }
+}
+.report-select {
+  border-radius: 10px !important;
+  border: 1.5px solid #a5b4fc !important;
+  font-weight: 500;
+  color: #3730a3 !important;
+  background: #f8fafc !important;
+  min-width: 120px;
+  margin-bottom: 8px;
+}
+.report-filters-bar {
+  background: #f1f5f9;
+  border-radius: 14px;
+  padding: 18px 18px 8px 18px;
+  box-shadow: 0 2px 8px #6366f122;
+  margin-bottom: 32px;
 }

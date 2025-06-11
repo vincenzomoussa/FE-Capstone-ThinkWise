@@ -26,6 +26,7 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
   const [studentiAssegnati, setStudentiAssegnati] = useState([]);
   const [insegnanti, setInsegnanti] = useState([]);
   const [aule, setAule] = useState([]);
+  const [tuttiCorsi, setTuttiCorsi] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
       fetchInsegnanti();
       fetchAule();
       fetchStudentiDisponibili();
+      fetchTuttiCorsi();
 
       if (corso) {
         setFormCorso({
@@ -97,6 +99,15 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
     }
   };
 
+  const fetchTuttiCorsi = async () => {
+    try {
+      const res = await apiClient.get('/corsi/all');
+      setTuttiCorsi(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      setTuttiCorsi([]);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormCorso((prev) => ({ ...prev, [name]: value }));
@@ -143,7 +154,7 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
       refresh();
     } catch (error) {
       console.error("❌ Errore durante il salvataggio del corso", error);
-      toast.error("Errore durante il salvataggio del corso.");
+      toast.error(error?.response?.data?.message || error?.message || "Errore durante il salvataggio del corso.");
     } finally {
       setSaving(false);
     }
@@ -153,7 +164,7 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
     <Modal show={show} onHide={onHide} size="lg" centered dialogClassName="custom-modal-corso">
       <Modal.Header closeButton style={{ border: "none", borderRadius: "16px 16px 0 0", background: "#f5f6fa" }}>
         <Modal.Title style={{ fontWeight: 700, fontSize: "1.35em", color: "#4f46e5", letterSpacing: 0.2 }}>
-          {corso ? "✏️ Modifica Corso" : "🆕 Crea Nuovo Corso"}
+          ✏️ Aggiungi/Modifica Corso
         </Modal.Title>
       </Modal.Header>
       <Modal.Body style={{ background: "#fff", borderRadius: "0 0 16px 16px", padding: "2.2rem 2.2rem 1.5rem 2.2rem" }}>
@@ -389,52 +400,37 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
                 }}
               >
                 <option value="">Seleziona aula</option>
-                {aule.map((aula) => (
-                  <option key={aula.id} value={aula.id}>
-                    {aula.nome}
-                  </option>
-                ))}
+                {aule.map((aula) => {
+                  const giorni = [formCorso.giorno];
+                  const orari = [formCorso.orario];
+                  if (formCorso.frequenza === "2 volte a settimana") {
+                    if (formCorso.secondoGiorno) giorni.push(formCorso.secondoGiorno);
+                    if (formCorso.secondoOrario) orari.push(formCorso.secondoOrario);
+                  }
+                  const occupata = tuttiCorsi.some((corso) => {
+                    if (!corso.aula || corso.aula.id !== aula.id) return false;
+                    const match1 = giorni[0] && orari[0] && corso.giorno === giorni[0] && corso.orario === orari[0];
+                    const match2 = giorni[1] && orari[1] && corso.secondoGiorno === giorni[1] && corso.secondoOrario === orari[1];
+                    const match3 = giorni[1] && orari[1] && corso.giorno === giorni[1] && corso.orario === orari[1];
+                    const match4 = giorni[0] && orari[0] && corso.secondoGiorno === giorni[0] && corso.secondoOrario === orari[0];
+                    return match1 || match2 || match3 || match4;
+                  });
+                  return (
+                    <option key={aula.id} value={aula.id} disabled={occupata}>
+                      {aula.nome} (Capienza: {aula.capienzaMax || aula.capienza})
+                      {" "}
+                      {occupata ? (
+                        <span>❌ Non disponibile</span>
+                      ) : (
+                        <span>✅ Disponibile</span>
+                      )}
+                    </option>
+                  );
+                })}
               </Form.Select>
             </Form.Group>
 
             <hr />
-
-            <h5 className="fw-bold">🎓 Studenti Assegnati</h5>
-            <ul>
-              {studentiAssegnati.map((studente) => (
-                <li key={studente.id}>
-                  {studente.nome} {studente.cognome}
-                  <Button variant="danger" size="sm" className="ms-2" onClick={() => handleRimuoviStudente(studente)}>
-                    Rimuovi
-                  </Button>
-                </li>
-              ))}
-            </ul>
-
-            <h5 className="fw-bold mt-4">🎓 Studenti Disponibili</h5>
-            <ul>
-              {studentiDisponibili
-                .filter(
-                  (studente) =>
-                    studente.giorniPreferiti?.includes(formCorso.giorno) &&
-                    studente.fasceOrariePreferite?.includes(formCorso.orario) &&
-                    (formCorso.secondoGiorno === "" || studente.giorniPreferiti?.includes(formCorso.secondoGiorno)) &&
-                    (formCorso.secondoOrario === "" || studente.fasceOrariePreferite?.includes(formCorso.secondoOrario))
-                )
-                .map((studente) => (
-                  <li key={studente.id}>
-                    {studente.nome} {studente.cognome}
-                    <Button
-                      variant="success"
-                      size="sm"
-                      className="ms-2"
-                      onClick={() => handleAggiungiStudente(studente)}
-                    >
-                      Aggiungi
-                    </Button>
-                  </li>
-                ))}
-            </ul>
 
             <div className="d-flex justify-content-end mt-4">
               <Button
@@ -477,27 +473,6 @@ const ModaleCorso = ({ show, onHide, corso = null, refresh }) => {
           </Form>
         )}
       </Modal.Body>
-      <style>{`
-        .custom-modal-corso .modal-content {
-          border-radius: 16px !important;
-          border: 2px solid #6366f1 !important;
-          box-shadow: 0 4px 24px #6366f122 !important;
-        }
-        .custom-modal-corso .modal-header {
-          border-radius: 16px 16px 0 0 !important;
-        }
-        .custom-modal-corso .modal-body {
-          border-radius: 0 0 16px 16px !important;
-        }
-        .custom-modal-corso .form-control:focus, .custom-modal-corso .form-select:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px #6366f155;
-        }
-        .custom-modal-corso .form-label {
-          font-weight: 700;
-          color: #3730a3;
-        }
-      `}</style>
     </Modal>
   );
 };

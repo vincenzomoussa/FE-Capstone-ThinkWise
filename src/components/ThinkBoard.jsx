@@ -7,6 +7,7 @@ import ThinkBar from "./ThinkBar";
 import Thinner from "./Thinner";
 import { motion } from "framer-motion";
 import { Button } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 // Palette moderna
 const COLORS = {
@@ -61,23 +62,42 @@ const ThinkBoard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [corsiInattivi, setCorsiInattivi] = useState(0);
+  const [nomiCorsiInattivi, setNomiCorsiInattivi] = useState([]);
+  const [insegnanti, setInsegnanti] = useState([]);
+  const [corsi, setCorsi] = useState([]);
+  const [insegnantiSenzaCorsi, setInsegnantiSenzaCorsi] = useState([]);
   const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      const [statsRes, avvisiRes, pagamentiRes, entrateUsciteRes, speseGeneraliRes, studentiRes] = await Promise.all([
-        apiClient.get("/dashboard/stats"),
-        apiClient.get("/dashboard/avvisi"),
-        apiClient.get("/dashboard/pagamenti-mensili"),
-        apiClient.get("/dashboard/entrate-uscite"),
-        apiClient.get("/dashboard/spese-generali"),
-        apiClient.get("/studenti?activeCoursesOnly=true"),
-      ]);
+      const [statsRes, avvisiRes, pagamentiRes, entrateUsciteRes, speseGeneraliRes, studentiRes, corsiDisattivatiRes, insegnantiRes, corsiRes] =
+        await Promise.all([
+          apiClient.get("/dashboard/stats"),
+          apiClient.get("/dashboard/avvisi"),
+          apiClient.get("/dashboard/pagamenti-mensili"),
+          apiClient.get("/dashboard/entrate-uscite"),
+          apiClient.get("/dashboard/spese-generali"),
+          apiClient.get("/studenti?activeCoursesOnly=true"),
+          apiClient.get("/corsi/disattivati"),
+          apiClient.get("/insegnanti"),
+          apiClient.get("/corsi"),
+        ]);
 
       setStats(statsRes.data || { studenti: 0, corsi: 0, pagamenti: 0, insegnanti: 0, spese: 0 });
       setDashboardAvvisi(avvisiRes.data || []);
+      setCorsiInattivi(Array.isArray(corsiDisattivatiRes.data) ? corsiDisattivatiRes.data.length : 0);
+      setNomiCorsiInattivi(Array.isArray(corsiDisattivatiRes.data) ? corsiDisattivatiRes.data.map((c) => c.nome) : []);
+      setInsegnanti(insegnantiRes.data || []);
+      setCorsi(Array.isArray(corsiRes.data) ? corsiRes.data : []);
+
+      // Calcolo insegnanti senza corsi
+      const insegnantiList = insegnantiRes.data || [];
+      const corsiList = Array.isArray(corsiRes.data) ? corsiRes.data : [];
+      const senzaCorsi = insegnantiList.filter((i) => !corsiList.some((c) => c.insegnante && c.insegnante.id === i.id));
+      setInsegnantiSenzaCorsi(senzaCorsi);
 
       // Identificazione problemi
       const problemiTemp = {
@@ -90,9 +110,6 @@ const ThinkBoard = () => {
         const msg = avviso.messaggio.toLowerCase();
         if (msg.includes("studente") || msg.includes("studenti")) {
           problemiTemp.studenti = true;
-        }
-        if (msg.includes("corso") || msg.includes("corsi")) {
-          problemiTemp.corsi = true;
         }
         if (msg.includes("pagamento") || msg.includes("pagamenti")) {
           problemiTemp.pagamenti = true;
@@ -298,24 +315,26 @@ const ThinkBoard = () => {
                   navigate("/studenti");
                 }}
               >
-                <h5>📌 Studenti</h5>
+                <h5>Studenti</h5>
                 <h2>{stats.studenti}</h2>
               </div>
             </div>
             <div className="col-md-4">
               <div
                 className="card p-4 text-center shadow-sm"
-                style={cardStyle(problemi.corsi)}
+                style={cardStyle(corsiInattivi > 0)}
                 onClick={() => {
-                  const avvisiCorsi = getAvvisiPer("corsi");
-                  if (avvisiCorsi.length > 0) {
-                    sessionStorage.setItem("dashboardAvvisi", JSON.stringify(avvisiCorsi));
+                  if (corsiInattivi > 0) {
+                    if (corsiInattivi === 1) {
+                      toast.warn(`Il corso ${nomiCorsiInattivi[0]} risulta al momento inattivo`);
+                    } else {
+                      toast.warn(`I corsi: ${nomiCorsiInattivi.join(", ")} risultano al momento inattivi`);
+                    }
                   }
-
                   navigate("/corsi");
                 }}
               >
-                <h5>📌 Corsi Attivi</h5>
+                <h5>Corsi</h5>
                 <h2>{stats.corsi}</h2>
               </div>
             </div>
@@ -323,9 +342,17 @@ const ThinkBoard = () => {
               <div
                 className="card p-4 text-center shadow-sm"
                 style={cardStyle(problemi.pagamenti)}
-                onClick={() => navigate("/report")}
+                onClick={() => {
+                  const avvisiPagamenti = getAvvisiPer("pagamento", "pagamenti");
+                  if (avvisiPagamenti.length > 0) {
+                    avvisiPagamenti.forEach((avviso) => {
+                      toast.warn(avviso.messaggio);
+                    });
+                  }
+                  navigate("/pagamenti");
+                }}
               >
-                <h5>💰 Totale Pagamenti</h5>
+                <h5>Totale Pagamenti</h5>
                 <h2>
                   € {stats.pagamenti.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </h2>
@@ -335,10 +362,20 @@ const ThinkBoard = () => {
             <div className="col-md-4 mt-4">
               <div
                 className="card p-4 text-center shadow-sm"
-                style={cardStyle(false)}
-                onClick={() => navigate("/insegnanti")}
+                style={cardStyle(insegnantiSenzaCorsi.length > 0)}
+                onClick={() => {
+                  if (insegnantiSenzaCorsi.length > 0) {
+                    if (insegnantiSenzaCorsi.length === 1) {
+                      toast.warn(`L'insegnante ${insegnantiSenzaCorsi[0].nome} ${insegnantiSenzaCorsi[0].cognome} non ha corsi da insegnare`);
+                    } else {
+                      const nomi = insegnantiSenzaCorsi.map(i => `${i.nome} ${i.cognome}`).join(", ");
+                      toast.warn(`Gli insegnanti ${nomi} non hanno corsi da insegnare`);
+                    }
+                  }
+                  navigate("/insegnanti");
+                }}
               >
-                <h5>👨‍🏫 Insegnanti</h5>
+                <h5>Insegnanti</h5>
                 <h2>{stats.insegnanti}</h2>
               </div>
             </div>
@@ -348,7 +385,7 @@ const ThinkBoard = () => {
                 style={cardStyle(false)}
                 onClick={() => navigate("/calendario")}
               >
-                <h5>🗓 Calendario</h5>
+                <h5>Calendario</h5>
                 <h2>Vedi</h2>
               </div>
             </div>
@@ -358,7 +395,7 @@ const ThinkBoard = () => {
                 style={cardStyle(false)}
                 onClick={() => navigate("/spese")}
               >
-                <h5>💸 Spese Totali</h5>
+                <h5>Spese Totali</h5>
                 <h2>€ {stats.spese.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
               </div>
             </div>
@@ -368,7 +405,26 @@ const ThinkBoard = () => {
         {!loading && !error && (
           <div className="row justify-content-center">
             <div className="col-md-6 mb-4">
-              <div className="card p-4 shadow-sm">
+              <div className="card p-4 shadow-sm position-relative">
+                {/* Badge mese corrente */}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 18,
+                    background: "#3B82F6",
+                    color: "#fff",
+                    borderRadius: 8,
+                    padding: "4px 14px",
+                    fontWeight: 600,
+                    fontSize: "0.95em",
+                    letterSpacing: 0.1,
+                    zIndex: 2,
+                    boxShadow: "0 2px 8px #3B82F622"
+                  }}
+                >
+                  Mese corrente
+                </span>
                 <Bar
                   data={{
                     labels: oreInsegnateMensili.labels,
@@ -385,13 +441,32 @@ const ThinkBoard = () => {
                       },
                     ],
                   }}
-                  options={getChartOptions("🕒 Ore totali di lezione ", false)}
+                  options={getChartOptions("Ore totali di lezione ", false)}
                 />
               </div>
             </div>
 
             <div className="col-md-6 mb-4">
-              <div className="card p-4 shadow-sm">
+              <div className="card p-4 shadow-sm position-relative">
+                {/* Badge ultimi 6 mesi */}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 18,
+                    background: "#3B82F6",
+                    color: "#fff",
+                    borderRadius: 8,
+                    padding: "4px 14px",
+                    fontWeight: 600,
+                    fontSize: "0.95em",
+                    letterSpacing: 0.1,
+                    zIndex: 2,
+                    boxShadow: "0 2px 8px #3B82F622"
+                  }}
+                >
+                  Ultimi 6 mesi
+                </span>
                 <Bar
                   data={{
                     labels: entrateUscite.labels,
@@ -418,13 +493,32 @@ const ThinkBoard = () => {
                       },
                     ],
                   }}
-                  options={getChartOptions("💰 Entrate/Uscite Istituto (€)", true)}
+                  options={getChartOptions("Entrate/Uscite Istituto", true)}
                 />
               </div>
             </div>
 
             <div className="col-md-6 mb-4">
-              <div className="card p-4 shadow-sm">
+              <div className="card p-4 shadow-sm position-relative">
+                {/* Badge totali */}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 16,
+                    right: 18,
+                    background: "#3B82F6",
+                    color: "#fff",
+                    borderRadius: 8,
+                    padding: "4px 14px",
+                    fontWeight: 600,
+                    fontSize: "0.95em",
+                    letterSpacing: 0.1,
+                    zIndex: 2,
+                    boxShadow: "0 2px 8px #3B82F622"
+                  }}
+                >
+                  Totali
+                </span>
                 <Bar
                   data={{
                     labels: speseGenerali.labels,
@@ -441,7 +535,7 @@ const ThinkBoard = () => {
                       },
                     ],
                   }}
-                  options={getChartOptions("💸 Spese Generali (€)", true)}
+                  options={getChartOptions("Spese Generali", true)}
                 />
               </div>
             </div>
@@ -464,18 +558,10 @@ const ThinkBoard = () => {
                       },
                     ],
                   }}
-                  options={getChartOptions("👨‍🎓 Studenti per Specializzazione", false)}
+                  options={getChartOptions("Studenti per Specializzazione", false)}
                 />
               </div>
             </div>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div className="d-flex justify-content-center mb-3">
-            <Button onClick={handleGenerateData} className="btn btn-info" disabled={loading}>
-              ⚙️ Genera Dati di Esempio
-            </Button>
           </div>
         )}
       </div>

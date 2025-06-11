@@ -214,28 +214,40 @@ const ListaAule = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedAule.map((aula) => (
-                  <tr key={aula.id}>
-                    <td className="fw-bold">{aula.nome}</td>
-                    <td>
-                      <span className="fw-bold">{aula.capienzaMax}</span>
-                    </td>
-                    <td className="text-end align-middle">
-                      <div className="actions-pill" style={{ float: "right" }}>
-                        <button className="btn btn-primary btn-sm" title="Dettagli" onClick={() => handleEdit(aula)}>
-                          <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
-                            🔍
-                          </span>
-                        </button>
-                        <button className="btn btn-danger btn-sm" title="Elimina" onClick={() => eliminaAula(aula.id)}>
-                          <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
-                            🗑️
-                          </span>
-                        </button>
-                      </div>
+                {sortedAule.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center">
+                      Nessuna aula trovata.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  sortedAule.map((aula) => (
+                    <tr key={aula.id}>
+                      <td className="fw-bold">{aula.nome}</td>
+                      <td>
+                        <span className="fw-bold">{aula.capienzaMax}</span>
+                      </td>
+                      <td className="text-end align-middle">
+                        <div className="actions-pill" style={{ float: "right" }}>
+                          <button className="btn btn-primary btn-sm" title="Dettagli" onClick={() => handleEdit(aula)}>
+                            <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
+                              ✏️
+                            </span>
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            title="Elimina"
+                            onClick={() => eliminaAula(aula.id)}
+                          >
+                            <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
+                              🗑️
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -335,27 +347,6 @@ const ListaAule = () => {
               </div>
             </Form>
           </Modal.Body>
-          <style>{`
-            .custom-modal-aula .modal-content {
-              border-radius: 16px !important;
-              border: 2px solid #6366f1 !important;
-              box-shadow: 0 4px 24px #6366f122 !important;
-            }
-            .custom-modal-aula .modal-header {
-              border-radius: 16px 16px 0 0 !important;
-            }
-            .custom-modal-aula .modal-body {
-              border-radius: 0 0 16px 16px !important;
-            }
-            .custom-modal-aula .form-control:focus {
-              border-color: #6366f1;
-              box-shadow: 0 0 0 2px #6366f155;
-            }
-            .custom-modal-aula .form-label {
-              font-weight: 700;
-              color: #3730a3;
-            }
-          `}</style>
         </Modal>
 
         <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered dialogClassName="custom-modal-aula">
@@ -444,27 +435,6 @@ const ListaAule = () => {
               </div>
             </Form>
           </Modal.Body>
-          <style>{`
-            .custom-modal-aula .modal-content {
-              border-radius: 16px !important;
-              border: 2px solid #6366f1 !important;
-              box-shadow: 0 4px 24px #6366f122 !important;
-            }
-            .custom-modal-aula .modal-header {
-              border-radius: 16px 16px 0 0 !important;
-            }
-            .custom-modal-aula .modal-body {
-              border-radius: 0 0 16px 16px !important;
-            }
-            .custom-modal-aula .form-control:focus {
-              border-color: #6366f1;
-              box-shadow: 0 0 0 2px #6366f155;
-            }
-            .custom-modal-aula .form-label {
-              font-weight: 700;
-              color: #3730a3;
-            }
-          `}</style>
         </Modal>
       </div>
     </>

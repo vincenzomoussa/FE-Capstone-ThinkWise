@@ -126,27 +126,6 @@ const ModaleSpesa = ({ show, onHide, formData, setFormData, handleSubmit, isEdit
           </div>
         </Form>
       </Modal.Body>
-      <style>{`
-        .custom-modal-spesa .modal-content {
-          border-radius: 16px !important;
-          border: 2px solid #6366f1 !important;
-          box-shadow: 0 4px 24px #6366f122 !important;
-        }
-        .custom-modal-spesa .modal-header {
-          border-radius: 16px 16px 0 0 !important;
-        }
-        .custom-modal-spesa .modal-body {
-          border-radius: 0 0 16px 16px !important;
-        }
-        .custom-modal-spesa .form-control:focus, .custom-modal-spesa .form-select:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px #6366f155;
-        }
-        .custom-modal-spesa .form-label {
-          font-weight: 700;
-          color: #3730a3;
-        }
-      `}</style>
     </Modal>
   );
 };

@@ -47,6 +47,7 @@ const ModaleInsegnante = ({
             <Form.Label className="fw-bold">Nome</Form.Label>
             <Form.Control
               name="nome"
+              placeholder="Nome insegnante"
               value={insegnante.nome || ""}
               onChange={handleChange}
               required
@@ -63,6 +64,7 @@ const ModaleInsegnante = ({
             <Form.Label className="fw-bold">Cognome</Form.Label>
             <Form.Control
               name="cognome"
+              placeholder="Cognome insegnante"
               value={insegnante.cognome || ""}
               onChange={handleChange}
               required
@@ -80,6 +82,7 @@ const ModaleInsegnante = ({
             <Form.Control
               type="email"
               name="email"
+              placeholder="Email insegnante"
               value={insegnante.email || ""}
               onChange={handleChange}
               required
@@ -97,6 +100,7 @@ const ModaleInsegnante = ({
             <Form.Control
               type="number"
               name="eta"
+              placeholder="Età insegnante"
               value={insegnante.eta || ""}
               onChange={handleChange}
               min={18}
@@ -250,27 +254,6 @@ const ModaleInsegnante = ({
           </div>
         </Form>
       </Modal.Body>
-      <style>{`
-        .custom-modal-insegnante .modal-content {
-          border-radius: 16px !important;
-          border: 2px solid #6366f1 !important;
-          box-shadow: 0 4px 24px #6366f122 !important;
-        }
-        .custom-modal-insegnante .modal-header {
-          border-radius: 16px 16px 0 0 !important;
-        }
-        .custom-modal-insegnante .modal-body {
-          border-radius: 0 0 16px 16px !important;
-        }
-        .custom-modal-insegnante .form-control:focus, .custom-modal-insegnante .form-select:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px #6366f155;
-        }
-        .custom-modal-insegnante .form-label {
-          font-weight: 700;
-          color: #3730a3;
-        }
-      `}</style>
     </Modal>
   );
 };

@@ -42,6 +42,7 @@ const ModaleStudente = ({ show, onHide, formStudente, setFormStudente, handleSal
               <Form.Control
                 type="text"
                 name="nome"
+                placeholder="Nome studente"
                 value={formStudente.nome || ""}
                 onChange={handleChange}
                 required
@@ -59,6 +60,7 @@ const ModaleStudente = ({ show, onHide, formStudente, setFormStudente, handleSal
               <Form.Control
                 type="text"
                 name="cognome"
+                placeholder="Cognome studente"
                 value={formStudente.cognome || ""}
                 onChange={handleChange}
                 required
@@ -76,6 +78,7 @@ const ModaleStudente = ({ show, onHide, formStudente, setFormStudente, handleSal
               <Form.Control
                 type="email"
                 name="email"
+                placeholder="Email studente"
                 value={formStudente.email || ""}
                 onChange={handleChange}
                 required
@@ -110,6 +113,7 @@ const ModaleStudente = ({ show, onHide, formStudente, setFormStudente, handleSal
               <Form.Control
                 type="number"
                 name="eta"
+                placeholder="Età studente"
                 value={formStudente.eta || ""}
                 onChange={handleChange}
                 required
@@ -247,27 +251,6 @@ const ModaleStudente = ({ show, onHide, formStudente, setFormStudente, handleSal
           </Form>
         </Modal.Body>
       </Modal>
-      <style>{`
-        .custom-modal-studente .modal-content {
-          border-radius: 16px !important;
-          border: 2px solid #6366f1 !important;
-          box-shadow: 0 4px 24px #6366f122 !important;
-        }
-        .custom-modal-studente .modal-header {
-          border-radius: 16px 16px 0 0 !important;
-        }
-        .custom-modal-studente .modal-body {
-          border-radius: 0 0 16px 16px !important;
-        }
-        .custom-modal-studente .form-control:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 2px #6366f155;
-        }
-        .custom-modal-studente .form-label {
-          font-weight: 700;
-          color: #3730a3;
-        }
-      `}</style>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import Thinnerlay from "./Thinnerlay";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import React from "react";
+import { formatDateDMY } from "../utils/dateUtils";
 
 const sortIcons = {
   asc: <span style={{ fontSize: "0.9em", marginLeft: 4 }}>▼</span>,
@@ -77,7 +78,11 @@ const ListaStudenti = () => {
     const avvisiJSON = sessionStorage.getItem("dashboardAvvisi");
     if (avvisiJSON) {
       const avvisi = JSON.parse(avvisiJSON);
-      avvisi.forEach((avviso) => toast.warn(avviso.messaggio));
+      avvisi.forEach((avviso) => {
+        if (!/pagamento|pagamenti/i.test(avviso.messaggio)) {
+          toast.warn(avviso.messaggio);
+        }
+      });
       sessionStorage.removeItem("dashboardAvvisi");
     }
   }, []);
@@ -97,19 +102,26 @@ const ListaStudenti = () => {
 
   const filtraStudentiModern = (lista) => {
     let filtered = lista.filter((s) => {
-      const valore = filtroValore.toLowerCase();
+      const valore = filtroValore.toLowerCase().trim();
       switch (filtroTipo) {
-        case "nome":
-          return s.nome.toLowerCase().includes(valore);
-        case "preferenzaCorso":
-          return (
-            Array.isArray(s.preferenzaCorso)
-              ? s.preferenzaCorso.join(" ").toLowerCase()
-              : (s.preferenzaCorso || "").toLowerCase()
-          ).includes(valore);
+        case "nome": {
+          // Ricerca combinata nome+cognome se c'è uno spazio
+          const fullName = (s.nome + " " + s.cognome).toLowerCase();
+          if (valore.includes(" ")) {
+            return fullName.includes(valore);
+          }
+          return s.nome.toLowerCase().includes(valore) || s.cognome.toLowerCase().includes(valore);
+        }
+        case "preferenza corso": {
+          const preferenze = Array.isArray(s.preferenzaCorso)
+            ? s.preferenzaCorso.join(" ").toLowerCase()
+            : (s.preferenzaCorso || "").toLowerCase();
+          const parole = valore.split(/\s+/).filter(Boolean);
+          return parole.every(p => preferenze.includes(p));
+        }
         case "corsi":
           return (s.corsi || []).some((corso) => corso.nome.toLowerCase().includes(valore));
-        case "dataIscrizione":
+        case "data iscrizione":
           return (s.dataIscrizione || "").toLowerCase().includes(valore);
         default:
           return true;
@@ -265,7 +277,7 @@ const ListaStudenti = () => {
                 onChange={(e) => setFiltroTipo(e.target.value)}
               >
                 <option value="nome">Nome</option>
-                <option value="preferenzaCorso">Preferenza Corso</option>
+                <option value="preferenza corso">Preferenza Corso</option>
                 <option value="corsi">Corsi</option>
                 <option value="dataIscrizione">Data Iscrizione</option>
               </select>
@@ -324,128 +336,147 @@ const ListaStudenti = () => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStudenti.map((s) => (
-                  <tr key={s.id}>
-                    <td>
-                      <div className="user-cell">
-                        <div className="user-avatar">
-                          {s.nome[0]}
-                          {s.cognome[0]}
-                        </div>
-                        <div className="user-info">
-                          <div className="fw-bold">
-                            {s.nome} {s.cognome}
-                          </div>
-                          <div className="text-muted small">{s.email}</div>
-                        </div>
-                      </div>
+                {paginatedStudenti.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center">
+                      Nessun studente trovato.
                     </td>
-                    <td style={{ minWidth: 120 }}>
-                      <div className="student-courses-badges-wrapper">
-                        <div className="student-courses-badges horizontal-badges">
-                          {Array.isArray(s.preferenzaCorso) ? (
-                            s.preferenzaCorso.map((pref, idx) => (
+                  </tr>
+                ) : (
+                  paginatedStudenti.map((s) => (
+                    <tr key={s.id}>
+                      <td>
+                        <div className="user-cell">
+                          <div className="user-avatar">
+                            {s.nome[0]}
+                            {s.cognome[0]}
+                          </div>
+                          <div className="user-info">
+                            <div className="fw-bold">
+                              {s.nome} {s.cognome}
+                            </div>
+                            <div className="text-muted small">{s.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ minWidth: 120 }}>
+                        <div className="student-courses-badges-wrapper">
+                          <div className="student-courses-badges horizontal-badges">
+                            {Array.isArray(s.preferenzaCorso) && s.preferenzaCorso.length > 0 ? (
+                              <>
+                                <span
+                                  className="badge badge-corso bg-primary text-light"
+                                  style={{ backgroundColor: "#6c63ff" }}
+                                >
+                                  {formatSpecializzazione(s.preferenzaCorso[0])}
+                                </span>
+                                {s.preferenzaCorso.length > 1 && (
+                                  <span
+                                    className="badge badge-corso bg-primary text-light"
+                                    style={{ backgroundColor: "#6c63ff", fontWeight: 600 }}
+                                  >
+                                    +{s.preferenzaCorso.length - 1}
+                                  </span>
+                                )}
+                              </>
+                            ) : s.preferenzaCorso ? (
                               <span
-                                key={idx}
                                 className="badge badge-corso bg-primary text-light"
                                 style={{ backgroundColor: "#6c63ff" }}
                               >
-                                {formatSpecializzazione(pref)}
+                                {formatSpecializzazione(s.preferenzaCorso)}
                               </span>
-                            ))
-                          ) : s.preferenzaCorso ? (
-                            <span
-                              className="badge badge-corso bg-primary text-light"
-                              style={{ backgroundColor: "#6c63ff" }}
-                            >
-                              {formatSpecializzazione(s.preferenzaCorso)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="fw-bold">{s.dataIscrizione}</span>
-                    </td>
-                    <td style={{ maxWidth: 220, whiteSpace: "normal", minHeight: 32 }}>
-                      {s.corsi && s.corsi.length > 0 ? (
-                        <div className="student-courses-badges-wrapper">
-                          <div className="student-courses-badges vertical-badges">
-                            {s.corsi.slice(0, 3).map((corso) => (
-                              <span
-                                key={corso.id}
-                                className={`badge badge-corso me-1 ${corso.attivo ? "bg-success" : "bg-secondary"}`}
-                                title={corso.nome}
-                              >
-                                {corso.nome}
-                              </span>
-                            ))}
+                            ) : null}
                           </div>
                         </div>
-                      ) : (
-                        <div className="d-flex justify-content-center">
-                          <span className="badge bg-warning text-dark">Nessun corso</span>
+                      </td>
+                      <td>
+                        <span className="fw-bold">{formatDateDMY(s.dataIscrizione)}</span>
+                      </td>
+                      <td style={{ maxWidth: 220, whiteSpace: "normal", minHeight: 32 }}>
+                        {s.corsi && s.corsi.length > 0 ? (
+                          <div className="student-courses-badges-wrapper">
+                            <div className="student-courses-badges vertical-badges">
+                              <span
+                                className={`badge badge-corso me-1 ${
+                                  s.corsi[0].attivo ? "bg-success" : "bg-secondary"
+                                }`}
+                                title={s.corsi[0].nome}
+                              >
+                                {s.corsi[0].nome}
+                              </span>
+                              {s.corsi.length > 1 && (
+                                <span className="badge  badge-corso bg-success text-light" style={{ fontWeight: 600 }}>
+                                  +{s.corsi.length - 1}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="d-flex justify-content-center">
+                            <span className="badge bg-warning text-dark">Nessun corso</span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            boxShadow: "0 1px 4px #0001",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <button
+                            className="btn btn-primary btn-sm"
+                            style={{
+                              borderRadius: "8px 0 0 8px",
+                              background: "#e0e7ff",
+                              border: "none",
+                              color: "#3b3b8f",
+                              padding: "10px 36px 10px 36px",
+                              outline: "none",
+                              fontSize: "1.45em",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              height: 44,
+                            }}
+                            title="Dettagli"
+                            onClick={() => navigate(`/studenti/${s.id}`)}
+                          >
+                            <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
+                              🔍
+                            </span>
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            style={{
+                              borderRadius: "0 8px 8px 0",
+                              background: "#fca5a5",
+                              border: "none",
+                              color: "#b91c1c",
+                              padding: "10px 36px 10px 36px",
+                              outline: "none",
+                              marginLeft: "-1px",
+                              fontSize: "1.45em",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              height: 44,
+                            }}
+                            title="Elimina"
+                            onClick={() => eliminaStudente(s.id)}
+                          >
+                            <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
+                              🗑️
+                            </span>
+                          </button>
                         </div>
-                      )}
-                    </td>
-                    <td>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          boxShadow: "0 1px 4px #0001",
-                          borderRadius: 8,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <button
-                          className="btn btn-primary btn-sm"
-                          style={{
-                            borderRadius: "8px 0 0 8px",
-                            background: "#e0e7ff",
-                            border: "none",
-                            color: "#3b3b8f",
-                            padding: "10px 36px 10px 36px",
-                            outline: "none",
-                            fontSize: "1.45em",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: 44,
-                          }}
-                          title="Dettagli"
-                          onClick={() => navigate(`/studenti/${s.id}`)}
-                        >
-                          <span role="img" aria-label="Dettagli" style={{ fontSize: "1.25em" }}>
-                            🔍
-                          </span>
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          style={{
-                            borderRadius: "0 8px 8px 0",
-                            background: "#fca5a5",
-                            border: "none",
-                            color: "#b91c1c",
-                            padding: "10px 36px 10px 36px",
-                            outline: "none",
-                            marginLeft: "-1px",
-                            fontSize: "1.45em",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: 44,
-                          }}
-                          title="Elimina"
-                          onClick={() => eliminaStudente(s.id)}
-                        >
-                          <span role="img" aria-label="Elimina" style={{ fontSize: "1.25em" }}>
-                            🗑️
-                          </span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
 
@@ -465,106 +496,6 @@ const ListaStudenti = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        .studentlist-scroll-area::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-scroll-area:hover::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        .studentlist-scroll-area:hover {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        /* Scrollbar globale invisibile */
-        ::-webkit-scrollbar {
-          width: 0 !important;
-          height: 0 !important;
-          display: none !important;
-          background: transparent !important;
-        }
-        html {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        .studentlist-pagination-sticky {
-          position: sticky;
-          bottom: 0;
-          background: #fff;
-          z-index: 2;
-          box-shadow: 0 -2px 8px #0001;
-          padding-top: 8px;
-          margin-bottom: -8px;
-        }
-        .studentlist-pagination-pills {
-          display: flex;
-          gap: 8px;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .studentlist-page-pill {
-          border-radius: 999px;
-          overflow: hidden;
-          transition: box-shadow 0.2s;
-        }
-        .studentlist-page-btn {
-          border: 1.5px solid #6366f1;
-          background: #fff;
-          color: #6366f1;
-          border-radius: 999px;
-          padding: 4px 16px;
-          font-size: 1em;
-          font-weight: 500;
-          transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-          outline: none;
-          cursor: pointer;
-        }
-        .studentlist-page-btn:hover {
-          background: #e0e7ff;
-          color: #3730a3;
-          box-shadow: 0 2px 8px #6366f122;
-        }
-        .studentlist-page-pill.active .studentlist-page-btn {
-          background: #6366f1;
-          color: #fff;
-          border-color: #6366f1;
-          box-shadow: 0 2px 8px #6366f133;
-        }
-        /* Altezza fissa per tutte le righe della tabella studenti */
-        .modern-table tbody tr {
-          height: 64px;
-          max-height: 64px;
-        }
-        .modern-table td {
-          vertical-align: middle !important;
-        }
-        /* Impedisco che i badge verticali facciano crescere la riga */
-        .student-courses-badges.vertical-badges {
-          min-height: 36px;
-          max-height: 36px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          overflow-y: hidden;
-          white-space: nowrap;
-          gap: 4px;
-        }
-        /* Se vuoi badge più piccoli, puoi aggiungere qui: */
-        /* .student-courses-badges.vertical-badges .badge { font-size: 0.95em; padding: 4px 10px; } */
-      `}</style>
     </>
   );
 };

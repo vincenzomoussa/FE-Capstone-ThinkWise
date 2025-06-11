@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import AppRouter from "./routes/AppRouter";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./scss/custom-theme.scss";
+import "./scss/custom.scss";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
